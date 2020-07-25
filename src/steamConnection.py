@@ -2,7 +2,7 @@ import requests
 from urllib import request
 import re
 import time
-import encryption
+from src import encryption
 
 
 # Function does a get request to steam's url

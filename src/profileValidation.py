@@ -9,12 +9,12 @@ profilesPath = os.path.join(cwd, "Profiles")
 
 # Function checks if a profiles directory exists if not it creates one
 def checkProfilesDirExists():
-    if os.path.exists("Profiles") and os.path.isdir("Profiles"):
+    if os.path.exists("../Profiles") and os.path.isdir("../Profiles"):
         print("profiles directory is all good")
     else:
         print("Profiles directory was missing, creating one now...")
         try:
-            os.mkdir("Profiles")
+            os.mkdir("../Profiles")
         except OSError as e:
             print("An Error Occurred...")
             print(e)
