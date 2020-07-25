@@ -1,0 +1,4 @@
+venv
+Profiles
+__pycache__/
+.idea
