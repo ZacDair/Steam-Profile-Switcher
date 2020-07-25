@@ -1,9 +1,8 @@
-# work in progress
-  
 # Desktop app to facilitate switching profiles
 This project is purely an automation tool.
   
-
+Work in progress project. 
+  
 Currently the goal is to produce a desktop application in python that allows the user to store multiple profiles,.  
 Each profile is a name, bio and avatar.
   
