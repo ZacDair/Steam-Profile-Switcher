@@ -1,7 +1,9 @@
-from tkinter import Tk, Label, Listbox, SINGLE, scrolledtext, Button, Frame, BOTH, N, E, S, W, Text, RAISED, NW, RIGHT, SUNKEN, LEFT, TOP, FLAT, BOTTOM, X, Y, PhotoImage, Entry, NE, Toplevel
+from tkinter import Tk, Label, Listbox, SINGLE, scrolledtext, Button, Frame, BOTH, RAISED, NW, RIGHT, LEFT, TOP, FLAT, BOTTOM, X, Y, PhotoImage, Entry, Toplevel, END
 import time
 
 # Init variables
+from tkinter.filedialog import askopenfilename
+
 profiles = []
 statusString = "Status: Waiting..."
 
@@ -31,7 +33,7 @@ class MainLayout(Frame):
         profileDetailsFrame.pack(side=RIGHT, fill=BOTH, expand=True)
 
         # Add our topFrame elements (status label, config button)
-        statusLabel = Label(topFrame, name="configButton", text=statusString)
+        statusLabel = Label(topFrame, name="statusLabel", text=statusString)
         statusLabel.pack(side=LEFT, padx=5, pady=5)
         configButton = Button(topFrame, name="configButton", text="Configs")
         configButton.pack(side=RIGHT, padx=5, pady=5)
@@ -67,12 +69,6 @@ class MainLayout(Frame):
         createProfileButton.configure(command=lambda: createProfileCreateWindow(self))
         configButton.configure(command=lambda: createConfigWindow(self))
         # switchProfileButton.configure(command="")
-
-        def scrollBoxClicked(e):
-            self.selectedItem = processScrollBoxSelection(scrollBox)
-
-        # Add event listener to the scrollbox
-        scrollBox.bind('<<ListboxSelect>>', scrollBoxClicked)
 
         self.pack(fill=BOTH, expand=True)
 
@@ -157,7 +153,17 @@ class CreateProfileLayout(Frame):
         avatarFrame.pack(side=TOP, padx=5, pady=5, anchor=NW)
         imageInput = Entry(avatarFrame, name="imageInput")
         imageInput.pack(side=LEFT, pady=5, anchor=NW)
-        browseButton = Button(avatarFrame, name="browseButton", text="Browse")
+
+        # Open file browser to select an image
+        def findImageFile():
+            acceptedFileTypes = [('image files', '.png'),
+                                 ('image files', '.jpg'),
+                                 ('image files', '.jpeg'),
+                                 ('image files', '.gif')]
+            selectedFilePath = askopenfilename(filetypes=acceptedFileTypes, title='Choose a file')
+            imageInput.insert(0, selectedFilePath)
+
+        browseButton = Button(avatarFrame, name="browseButton", text="Browse", command=findImageFile)
         browseButton.pack(side=LEFT, anchor=NW)
 
         bioInput = scrolledtext.ScrolledText(inputFrame, name="bioInput")
@@ -190,12 +196,12 @@ def createMainWindow():
     mainWindow = Tk()
     mainWindow.geometry("550x500+300+300")
     appMain = MainLayout()
-    mainWindow.mainloop()
+    return appMain
 
 
 # Function that will create the delete application window
 def createDeleteWindow(mainWindow):
-    if mainWindow.selectedItem:
+    if type(mainWindow.selectedItem) == int:
         deleteWindow = Toplevel(mainWindow)
         deleteWindow.geometry("250x200+300+300")
         DeleteProfileLayout(deleteWindow)
@@ -229,13 +235,53 @@ def createAlertWindow(mainWindow, message):
 
 
 # Function triggered by an element of the scrollBox being clicked
-def processScrollBoxSelection(scrollBox):
-    selectedItem = scrollBox.curselection()
-    if len(selectedItem) > 0:
-        return selectedItem[0]
+def processScrollBoxSelection(mainWindow, scrollBox):
+    selection = scrollBox.curselection()
+    if len(selection) > 0:
+        mainWindow.selectedItem = selection[0]
+        return selection[0]
     else:
         return False
 
 
-createMainWindow()
+# Main loop function
+def runWindow(mainWindow):
+    mainWindow.mainloop()
 
+
+# Populate our scrollBox based on the profiles list passed in args
+def populateScrollBox(profileList, mainWindow):
+    scrollBox = getScrollBoxItem(mainWindow, "scrollBox")
+    for profile in profileList:
+        scrollBox.insert(END, profile)
+
+
+# Retrieve and update our scroll box status label
+def updateScrollBoxLabel(updateLabel, mainWindow):
+    scrollBoxLabel = getScrollBoxItem(mainWindow, "scrollBoxLabel")
+    scrollBoxLabel.configure(text=updateLabel)
+
+
+# Use our window and a key to retrieve an element from the scrollBox frame
+def getScrollBoxItem(mainWindow, key):
+    scrollBoxFrame = mainWindow.children.get("scrollBoxFrame")
+    return scrollBoxFrame.children.get(key)
+
+
+def updateProfileDetails(mainWindow, profileDetails):
+    profileDetailsFrame = mainWindow.children.get("profileDetailsFrame")
+    NameLabel = profileDetailsFrame.children.get("profileNameLabel")
+    imgLabel = profileDetailsFrame.children.get("profileImgLabel")
+    bioLabel = profileDetailsFrame.children.get("profileBioLabel")
+    try:
+        NameLabel.configure(text="Profile Name: " + profileDetails["name"].replace("\n", ""))
+        imgLabel.configure(text="Profile Image: " + profileDetails["img"])
+        if profileDetails["bio"] != "None":
+            miniBioList = profileDetails["bio"]
+            bioLabel.configure(text="Profile Bio: " + miniBioList[0].replace("\n", "") + "...")
+        else:
+            bioLabel.configure(text="Profile Bio: " + profileDetails["name"])
+    except KeyError:
+        print("Key error was found in the profile details dict")
+    except IndexError:
+        print("Index error, check bio")
