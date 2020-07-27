@@ -199,6 +199,7 @@ def createDeleteWindow(mainWindow):
         deleteWindow = Toplevel(mainWindow)
         deleteWindow.geometry("250x200+300+300")
         DeleteProfileLayout(deleteWindow)
+        deleteWindow.grab_set()
     else:
         createAlertWindow(mainWindow, "Please select a profile to delete")
 
@@ -208,6 +209,7 @@ def createConfigWindow(mainWindow):
     configWindow = Toplevel(mainWindow)
     ConfigLayout(configWindow)
     configWindow.geometry("300x200+300+300")
+    configWindow.grab_set()
 
 
 # Function that will create the create profile application window
@@ -215,13 +217,15 @@ def createProfileCreateWindow(mainWindow):
     createWindow = Toplevel(mainWindow)
     createWindow.geometry("450x400+300+300")
     CreateProfileLayout(createWindow)
+    createWindow.grab_set()
 
 
 # Function that will create an alert window
 def createAlertWindow(mainWindow, message):
     alertWindow = Toplevel(mainWindow)
-    alertWindow.geometry("250x80")
+    alertWindow.geometry("250x80+450+450")
     AlertLayout(alertWindow, message)
+    alertWindow.grab_set()
 
 
 # Function triggered by an element of the scrollBox being clicked
