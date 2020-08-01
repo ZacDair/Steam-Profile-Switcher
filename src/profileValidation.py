@@ -4,16 +4,17 @@ from shutil import copy, rmtree
 # List of accepted images formats
 acceptedImageFormats = (".png", ".jpeg", ".jpg", ".gif", ".PNG", ".JPEG", ".JPG", ".GIF")
 cwd = os.getcwd()
-mainDir = cwd.replace("\\src", "")
+# Clean CWD path into our main projects path
+mainDir = cwd[:-4]
 profilesPath = os.path.join(mainDir, "Profiles")
 
 
 # Function checks if a profiles directory exists if not it creates one
 def checkProfilesDirExists():
     if os.path.exists(profilesPath) and os.path.isdir(profilesPath):
-        print("profiles directory is all good")
+        print("Profiles Directory was found")
     else:
-        print("Profiles directory was missing, creating one now...")
+        print("Profiles Directory was missing, creating one now...")
         try:
             os.mkdir(profilesPath)
         except OSError as e:
@@ -90,5 +91,7 @@ def deleteProfileFolder(profileName):
     try:
         rmtree(os.path.join(profilesPath, profileName))
         print("Deleted Profile: ", profileName)
+        return True
     except OSError as e:
         print("OS Error: ", e)
+        return False

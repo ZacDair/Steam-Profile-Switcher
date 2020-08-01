@@ -35,8 +35,7 @@ def deleteProfile(index):
     profiles = profileValidation.getProfiles()
     try:
         profile = profiles[index]
-        profileValidation.deleteProfileFolder(profile[0])
-        return True
+        return profileValidation.deleteProfileFolder(profile)
     except IndexError as e:
         print("Error has occurred ...")
         print(e)
@@ -46,7 +45,7 @@ def deleteProfile(index):
 def getProfileDetails(index):
     profiles = profileValidation.getProfiles()
     try:
-        return profileValidation.getProfileDetails(profiles[0])
+        return profileValidation.getProfileDetails(profiles[index])
     except IndexError as e:
         print("Error has occurred ...")
         print(e)

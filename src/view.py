@@ -1,11 +1,11 @@
 from tkinter import Tk, Label, Listbox, SINGLE, scrolledtext, Button, Frame, BOTH, RAISED, NW, RIGHT, LEFT, TOP, FLAT, BOTTOM, X, Y, PhotoImage, Entry, Toplevel, END
-import time
-
-# Init variables
 from tkinter.filedialog import askopenfilename
 
+# Init variables
 profiles = []
 statusString = "Status: Waiting..."
+selection = "Profile Name"
+deleteProfile = False
 
 
 # Class to contain the layout of our main screen
@@ -64,12 +64,6 @@ class MainLayout(Frame):
         createProfileButton = Button(controlFrame, name="createProfileButton", text="Create Profile")
         createProfileButton.pack(side=RIGHT, padx=5, pady=5)
 
-        # Add our commands to our buttons
-        deleteProfileButton.configure(command=lambda: createDeleteWindow(self))
-        createProfileButton.configure(command=lambda: createProfileCreateWindow(self))
-        configButton.configure(command=lambda: createConfigWindow(self))
-        # switchProfileButton.configure(command="")
-
         self.pack(fill=BOTH, expand=True)
 
 
@@ -81,14 +75,13 @@ class DeleteProfileLayout(Frame):
 
     def initUI(self, deleteWindow):
         deleteWindow.title("Delete Profile")
-
         warningLabel = Label(deleteWindow, name="warningLabel", text="Are you sure you want to delete this profile: ")
         warningLabel.pack(side=TOP, padx=5, pady=5)
         selectedItemLabel = Label(deleteWindow, name="selectedItemLabel", text="Profile Name")
         selectedItemLabel.pack(side=TOP, padx=5, pady=5)
         yesButton = Button(deleteWindow, name="yesButton", text="Yes")
         yesButton.pack(side=LEFT, padx=5, pady=5, expand=True, fill=X)
-        noButton = Button(deleteWindow, name="noButton", text="No")
+        noButton = Button(deleteWindow, name="noButton", text="No", command=deleteWindow.destroy)
         noButton.pack(side=RIGHT, padx=5, pady=5, expand=True, fill=X)
 
         self.pack(fill=BOTH, expand=True)
@@ -172,7 +165,7 @@ class CreateProfileLayout(Frame):
         saveButton = Button(controlFrame, name="saveButton", text="Save")
         saveButton.pack(side=LEFT, padx=5, pady=5, expand=True, fill=X)
 
-        exitButton = Button(controlFrame, name="exitButton", text="Exit")
+        exitButton = Button(controlFrame, name="exitButton", text="Exit", command=profileWindow.destroy)
         exitButton.pack(side=RIGHT, padx=5, pady=5, expand=True, fill=X)
 
         self.pack(fill=BOTH, expand=True)
@@ -206,8 +199,11 @@ def createDeleteWindow(mainWindow):
         deleteWindow.geometry("250x200+300+300")
         DeleteProfileLayout(deleteWindow)
         deleteWindow.grab_set()
+        updateDeleteProfileNameLabel(deleteWindow)
+        return deleteWindow
     else:
         createAlertWindow(mainWindow, "Please select a profile to delete")
+        return False
 
 
 # Function that will create the config application window
@@ -216,6 +212,7 @@ def createConfigWindow(mainWindow):
     ConfigLayout(configWindow)
     configWindow.geometry("300x200+300+300")
     configWindow.grab_set()
+    return configWindow
 
 
 # Function that will create the create profile application window
@@ -224,6 +221,7 @@ def createProfileCreateWindow(mainWindow):
     createWindow.geometry("450x400+300+300")
     CreateProfileLayout(createWindow)
     createWindow.grab_set()
+    return createWindow
 
 
 # Function that will create an alert window
@@ -236,17 +234,12 @@ def createAlertWindow(mainWindow, message):
 
 # Function triggered by an element of the scrollBox being clicked
 def processScrollBoxSelection(mainWindow, scrollBox):
-    selection = scrollBox.curselection()
-    if len(selection) > 0:
-        mainWindow.selectedItem = selection[0]
-        return selection[0]
+    selected = scrollBox.curselection()
+    if len(selected) > 0:
+        mainWindow.selectedItem = selected[0]
+        return selected[0]
     else:
         return False
-
-
-# Main loop function
-def runWindow(mainWindow):
-    mainWindow.mainloop()
 
 
 # Populate our scrollBox based on the profiles list passed in args
@@ -268,20 +261,39 @@ def getScrollBoxItem(mainWindow, key):
     return scrollBoxFrame.children.get(key)
 
 
+# Update the profile details labels, according to the details stored
 def updateProfileDetails(mainWindow, profileDetails):
     profileDetailsFrame = mainWindow.children.get("profileDetailsFrame")
     NameLabel = profileDetailsFrame.children.get("profileNameLabel")
     imgLabel = profileDetailsFrame.children.get("profileImgLabel")
     bioLabel = profileDetailsFrame.children.get("profileBioLabel")
     try:
-        NameLabel.configure(text="Profile Name: " + profileDetails["name"].replace("\n", ""))
+        name = profileDetails["name"].replace("\n", "")
+        NameLabel.configure(text="Profile Name: " + name)
         imgLabel.configure(text="Profile Image: " + profileDetails["img"])
         if profileDetails["bio"] != "None":
-            miniBioList = profileDetails["bio"]
-            bioLabel.configure(text="Profile Bio: " + miniBioList[0].replace("\n", "") + "...")
+            BioLines = profileDetails["bio"]
+            bioLabel.configure(text="Profile Bio: " + BioLines[0].replace("\n", "") + "...")
         else:
-            bioLabel.configure(text="Profile Bio: " + profileDetails["name"])
+            bioLabel.configure(text="Profile Bio: No Bio found")
     except KeyError:
         print("Key error was found in the profile details dict")
     except IndexError:
         print("Index error, check bio")
+
+
+# Return the statusLabel widget from the main window
+def getStatusLabel(mainWindow):
+    topFrame = mainWindow.children.get("topFrame")
+    return topFrame.children.get("statusLabel")
+
+
+# Update the label with our selected profile name
+def updateDeleteProfileNameLabel(window):
+    label = window.children.get("selectedItemLabel")
+    label.configure(text=selection)
+
+
+# Clear the scrollBox contents
+def clearScrollBox(scrollBox):
+    scrollBox.delete(0, END)
