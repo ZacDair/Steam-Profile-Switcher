@@ -101,14 +101,20 @@ statusLabel = view.getStatusLabel(mainWindow)
 statusLabel.bind('<Button-1>', triggerLoginLogic)
 
 
-# Event listener for the delete Profile button (creates a delete profile window)
+# Event listeners for the main screen TODO: potentially isolate the lamda functions into local calls
 controlFrame = mainWindowChildren.get("controlFrame")
+topFrame = mainWindowChildren.get("topFrame")
+
 deleteProfileButton = controlFrame.children.get("deleteProfileButton")
 createProfileButton = controlFrame.children.get("createProfileButton")
 switchProfileButton = controlFrame.children.get("switchProfileButton")
+helpButton = controlFrame.children.get("helpButton")
+configButton = topFrame.children.get("configButton")
 
 deleteProfileButton.configure(command=createDeleteProfileWindow)
 createProfileButton.configure(command=createProfileCreateWindow)
+helpButton.configure(command=lambda: view.createAlertWindow(mainWindow, "Help will go here...\n.\n.\nthis should be a good help notice"))
+configButton.configure(command=lambda: view.createConfigWindow(mainWindow))
 
 
 # Initial check for profiles, either populates the scrollBox, or will create an empty dir if needed
