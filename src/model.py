@@ -1,5 +1,6 @@
 import profileValidation
 import configFileValidation
+import steamLogin
 
 
 # Validate and retrieve our profiles
@@ -42,6 +43,7 @@ def deleteProfile(index):
         return False
 
 
+# Find profile details by index, searches the profiles dir for the (index)-th profile returns correct details
 def getProfileDetails(index):
     profiles = profileValidation.getProfiles()
     try:
@@ -50,3 +52,29 @@ def getProfileDetails(index):
         print("Error has occurred ...")
         print(e)
         return False
+
+
+# Check if we are logged into Steam, returns a string and a boolean
+def checkLogin():
+    response = steamLogin.checkLogin()
+    if response == "No Connection":
+        return "Please check Steam server status...", False
+    elif response:
+        return "Logged in to Steam", True
+    else:
+        return "Please click here to login", False
+
+
+# Send our first login request to get the rsa key and check if we need a captcha
+def captchaNeeded():
+    return steamLogin.CaptchaRequired()
+
+
+def tryToLogin(username, password, twoFA, captcha, gid, sessionID):
+    rsaData = steamLogin.getRSAData(username)
+    doNotCache = steamLogin.getDoNotCache()
+    timestamp = steamLogin.getTimestamp(rsaData)
+    encryptedPass = steamLogin.getEncryptedPassword(rsaData, password)
+    loginResponse = steamLogin.requestToDoLogin(doNotCache, encryptedPass, username, twoFA,
+                                                gid, captcha, sessionID, timestamp)
+    return loginResponse

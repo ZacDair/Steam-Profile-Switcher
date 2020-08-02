@@ -2,7 +2,7 @@ import requests
 from urllib import request
 import re
 import time
-from src import encryption
+import encryption
 
 
 # Function does a get request to steam's url
@@ -88,7 +88,7 @@ def CaptchaRequired():
         if gid != "-1":
             print("Captcha should be required, gid: ", gid)
             r = request.urlopen(captchaURL+gid)
-            output = open("captcha"+gid+".jpg", "wb")
+            output = open("../captcha.jpg", "wb")
             output.write(r.read())
             output.close()
             return True, sessionID, gid
@@ -126,3 +126,37 @@ def login(username, password):
 
     # Run our dologin request with all our required data (TODO: check into the changes in requests when you save login)
     requestToDoLogin(donotcache, password, username, twoFA, gid, captcha, sessionID, timeStamp)
+
+
+# Function sends a request to steams url if the cookies contains a secure id we can say we are logged in
+def checkLogin():
+    url = "https://steamcommunity.com/login/home/?goto="
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        for x in resp.cookies:
+            if str(x).startswith("<Cookie steamLoginSecure"):
+                return True
+        return False
+    else:
+        return "No Connection"
+
+
+# Get RSA Data
+def getRSAData(username):
+    print(requestToGetRsaKey(username))
+    return requestToGetRsaKey(username)
+
+
+# Get DoNotCache
+def getDoNotCache():
+    return re.sub(r'\.', '', str(time.time()))[:-4]
+
+
+# Get Timestamp
+def getTimestamp(rsaData):
+    return rsaData["timestamp"]
+
+
+# Get encrypted password
+def getEncryptedPassword(rsaData, password):
+    return encryption.runStuff(encryption.setVar(rsaData["publickey_mod"], rsaData["publickey_exp"], password))

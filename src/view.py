@@ -171,6 +171,7 @@ class CreateProfileLayout(Frame):
         self.pack(fill=BOTH, expand=True)
 
 
+# Class containing the layout for the alert window
 class AlertLayout(Frame):
     def __init__(self, alertWindow, message):
         super().__init__()
@@ -180,6 +181,64 @@ class AlertLayout(Frame):
         alertWindow.title("Alert")
         Label(alertWindow, text=message).pack(side=TOP, padx=5, pady=5)
         Button(alertWindow, text="OK", command=alertWindow.destroy).pack(side=TOP, padx=5, pady=5)
+
+        self.pack(fill=BOTH, expand=True)
+
+
+# Class containing the layout for the login window
+class LoginLayout(Frame):
+    def __init__(self, loginWindow):
+        super().__init__()
+        self.initUI(loginWindow)
+
+    def initUI(self, loginWindow):
+        loginWindow.title("Login")
+
+        # Left and right frames to contain Labels and Inputs
+        mainLabel = Label(loginWindow, name="mainLabel", text="Enter Your Steam Login Details:")
+        mainLabel.pack(side=TOP, padx=5, pady=5, anchor=NW)
+
+        controlFrame = Frame(loginWindow, name="controlFrame")
+        controlFrame.pack(side=BOTTOM, fill=BOTH, expand=True)
+
+        labelFrame = Frame(loginWindow, name="labelFrame")
+        labelFrame.pack(side=LEFT, fill=BOTH, expand=True)
+
+        inputFrame = Frame(loginWindow, name="inputFrame")
+        inputFrame.pack(side=RIGHT, fill=BOTH, expand=True)
+
+        usernameLabel = Label(labelFrame, name="usernameLabel", text="Steam Username: ")
+        usernameLabel.pack(side=TOP, padx=5, pady=5, anchor=NW)
+
+        usernameInput = Entry(inputFrame, name="usernameInput")
+        usernameInput.pack(side=TOP, padx=5, pady=5, anchor=NW)
+
+        passwordLabel = Label(labelFrame, name="passwordLabel", text="Steam Password: ")
+        passwordLabel.pack(side=TOP, padx=5, pady=5, anchor=NW)
+
+        passwordInput = Entry(inputFrame, name="passwordInput", show="*")
+        passwordInput.pack(side=TOP, padx=5, pady=5, anchor=NW)
+
+        twoFALabel = Label(labelFrame, name="twoFALabel", text="Two Factor Code (if required): ")
+        twoFALabel.pack(side=TOP, padx=5, pady=5, anchor=NW)
+
+        twoFAInput = Entry(inputFrame, name="twoFAInput")
+        twoFAInput.pack(side=TOP, padx=5, pady=5, anchor=NW)
+
+        captchaLabel = Label(labelFrame, name="captchaLabel", text="Captcha Code: ")
+        captchaLabel.pack(side=TOP, padx=5, pady=5, anchor=NW)
+
+        captchaImageLabel = Label(labelFrame, name="captchaImageLabel", text="No Captcha Needed!")
+        captchaImageLabel.pack(side=TOP, padx=5, pady=5, anchor=NW)
+
+        captchaInput = Entry(inputFrame, name="captchaInput")
+        captchaInput.pack(side=TOP, padx=5, pady=5, anchor=NW)
+
+        loginButton = Button(controlFrame, name="loginButton", text="Login")
+        loginButton.pack(side=LEFT, padx=5, pady=5, expand=True, fill=X)
+
+        exitButton = Button(controlFrame, name="exitButton", text="Exit", command=loginWindow.destroy)
+        exitButton.pack(side=RIGHT, padx=5, pady=5, expand=True, fill=X)
 
         self.pack(fill=BOTH, expand=True)
 
@@ -230,6 +289,15 @@ def createAlertWindow(mainWindow, message):
     alertWindow.geometry("250x80+450+450")
     AlertLayout(alertWindow, message)
     alertWindow.grab_set()
+
+
+# Function that will create and return the login window
+def createLoginWindow(mainWindow):
+    loginWindow = Toplevel(mainWindow)
+    loginWindow.geometry("450x400+300+300")
+    LoginLayout(loginWindow)
+    loginWindow.grab_set()
+    return loginWindow
 
 
 # Function triggered by an element of the scrollBox being clicked
@@ -297,3 +365,10 @@ def updateDeleteProfileNameLabel(window):
 # Clear the scrollBox contents
 def clearScrollBox(scrollBox):
     scrollBox.delete(0, END)
+
+
+def setCaptchaImage(captchaImageLabel):
+    captchaImage = PhotoImage(file="../captcha.jpg")
+    captchaImageLabel.configure(image=captchaImage)
+    captchaImageLabel.image = captchaImage
+    captchaImageLabel.pack()

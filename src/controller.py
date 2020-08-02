@@ -6,6 +6,11 @@ import model
 mainWindow = view.createMainWindow()
 mainWindowChildren = mainWindow.children
 
+# Check to see if we are logged in
+label = view.getStatusLabel(mainWindow)
+loginStatus, loggedIn = model.checkLogin()
+label.configure(fg="blue", text=loginStatus)
+
 
 # Ask model to find our profiles, then update our view accordingly
 def updateProfileList():
@@ -23,14 +28,41 @@ def triggerSelectionLogic(event):
         view.selection = profileDetails["name"].strip("\n")
 
 
-# Login logic TODO: implemented the commented functionality
+# Event triggered by login button, attempts a login (TODO: potential threading needed to create a please wait)
 def triggerLoginLogic(event):
-    '''if model.isLoggedIn():
-            view.updateStatusLabel("Logged in as ...")
-        else:
-            view.createLoginWindow'''
-    label = view.getStatusLabel(mainWindow)
-    label.configure(text="this should come up")
+    loginStatusString, loginStatusBool = model.checkLogin()
+    if not loginStatusBool:
+        # Create our login window
+        loginWindow = view.createLoginWindow(mainWindow)
+
+        # Get our login window elements
+        inputFrame = loginWindow.children.get("inputFrame")
+        labelFrame = loginWindow.children.get("labelFrame")
+        buttonFrame = loginWindow.children.get("controlFrame")
+        usernameInput = inputFrame.children.get("usernameInput")
+        passwordInput = inputFrame.children.get("passwordInput")
+        twoFAInput = inputFrame.children.get("twoFAInput")
+        captchaInput = inputFrame.children.get("captchaInput")
+        captchaImageLabel = labelFrame.children.get("captchaImageLabel")
+        loginButton = buttonFrame.children.get("loginButton")
+
+        # Check if we need a captcha
+        captchaNeeded, sessionID, gid = model.captchaNeeded()
+        if captchaNeeded:
+            # Set captcha image label to the stored image
+            view.setCaptchaImage(captchaImageLabel)
+
+        # Retrieve data from our input fields and attempt to login
+        def doLogin():
+            username = usernameInput.get()
+            password = passwordInput.get()
+            twoFA = twoFAInput.get()
+            captchaCode = captchaInput.get()
+            res = model.tryToLogin(username, password, twoFA, captchaCode, gid, sessionID)
+            print(res)
+        loginButton.configure(command=doLogin)
+    mainWindowLabel = view.getStatusLabel(mainWindow)
+    mainWindowLabel.configure(fg="blue", text=loginStatusString)
 
 
 # Calls the model to delete the selected profile
@@ -101,7 +133,7 @@ statusLabel = view.getStatusLabel(mainWindow)
 statusLabel.bind('<Button-1>', triggerLoginLogic)
 
 
-# Event listeners for the main screen TODO: potentially isolate the lamda functions into local calls
+# Event listeners for the main screen TODO: potentially isolate the lambda functions into local calls
 controlFrame = mainWindowChildren.get("controlFrame")
 topFrame = mainWindowChildren.get("topFrame")
 
@@ -115,7 +147,6 @@ deleteProfileButton.configure(command=createDeleteProfileWindow)
 createProfileButton.configure(command=createProfileCreateWindow)
 helpButton.configure(command=lambda: view.createAlertWindow(mainWindow, "Help will go here...\n.\n.\nthis should be a good help notice"))
 configButton.configure(command=lambda: view.createConfigWindow(mainWindow))
-
 
 # Initial check for profiles, either populates the scrollBox, or will create an empty dir if needed
 updateProfileList()
