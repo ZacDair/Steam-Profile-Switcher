@@ -20,7 +20,7 @@ More updates and info soon.
 - [x] GUI to support our features  
 - [x] Revese engineered Steam login  
 - [ ] Improve login time (30secs is way too long)  
-- [ ] Convert login to a background process  
+- [x] Convert login to a background process - ended up being a thread  
 - [ ] Use the return result of the login  
 - [ ] Potentially implement a login on load feature (requires storing the password locally)  
 - [ ] Stay logged in implementation  
