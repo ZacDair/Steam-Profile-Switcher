@@ -1,7 +1,7 @@
 # Desktop app to facilitate switching profiles
 This project is purely an automation tool.
   
-##Work in progress project.##  
+## Work in progress project. ##  
   
 Currently the goal is to produce a desktop application in python that allows the user to store multiple profiles,.  
 Each profile is a name, bio and avatar.  
@@ -12,7 +12,7 @@ To achieve this functionality a reverse engineered version of Steam's login syst
   
 More updates and info soon. 
 
-###Quick Progress List:###  
+### Quick Progress List: ###  
 
 - [x] MVC base structure implemented  
 - [x] Create profile functionality  
