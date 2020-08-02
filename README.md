@@ -12,11 +12,20 @@ To achieve this functionality a reverse engineered version of Steam's login syst
   
 More updates and info soon. 
 
-[X] MVC base structure implemented  
-[X] Create profile functionality  
-[X] Delete profile functionality  
-[X] GUI to support our features  
-[X] Revese engineered Steam login  
-[] Improve login time (30secs is way too long)  
-[] Convert login to a background process  
-[] Switch functionality needs to be implemented and triggered by the button  
+- [x] MVC base structure implemented  
+- [x] Create profile functionality  
+- [x] Delete profile functionality  
+- [x] GUI to support our features  
+- [x] Revese engineered Steam login  
+- [ ] Improve login time (30secs is way too long)  
+- [ ] Convert login to a background process  
+- [ ] Use the return result of the login  
+- [ ] Potentially implement a login on load feature (requires storing the password locally)  
+- [ ] Stay logged in implementation  
+- [ ] Help content to be written  
+- [ ] Merge old config window functionality
+- [ ] Fix profile details image display  
+- [ ] Test captcha image display  
+- [ ] Log out functionality (Research and implement)  
+- [ ] Switch functionality needs to be implemented and triggered by the button  
+
