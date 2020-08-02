@@ -1,5 +1,7 @@
-from tkinter import Tk, Label, Listbox, SINGLE, scrolledtext, Button, Frame, BOTH, RAISED, NW, RIGHT, LEFT, TOP, FLAT, BOTTOM, X, Y, PhotoImage, Entry, Toplevel, END
+from tkinter import Tk, Label, Listbox, SINGLE, scrolledtext, Button, Frame, BOTH, RAISED, NW, RIGHT, LEFT, TOP, FLAT, BOTTOM, X, Y, PhotoImage, Entry, Toplevel, END, HORIZONTAL
 from tkinter.filedialog import askopenfilename
+from tkinter.ttk import Progressbar
+import time
 
 # Init variables
 profiles = []
@@ -198,6 +200,9 @@ class LoginLayout(Frame):
         mainLabel = Label(loginWindow, name="mainLabel", text="Enter Your Steam Login Details:")
         mainLabel.pack(side=TOP, padx=5, pady=5, anchor=NW)
 
+        progressFrame = Frame(loginWindow, name="progressFrame")
+        progressFrame.pack(side=BOTTOM, fill=BOTH, expand=True)
+
         controlFrame = Frame(loginWindow, name="controlFrame")
         controlFrame.pack(side=BOTTOM, fill=BOTH, expand=True)
 
@@ -239,6 +244,12 @@ class LoginLayout(Frame):
 
         exitButton = Button(controlFrame, name="exitButton", text="Exit", command=loginWindow.destroy)
         exitButton.pack(side=RIGHT, padx=5, pady=5, expand=True, fill=X)
+
+        loginResponseLabel = Label(progressFrame, name="loginResponseLabel", text="this is a test")
+        loginResponseLabel.pack(side=BOTTOM, padx=5, pady=5, anchor=NW)
+
+        progressBar = Progressbar(progressFrame, name="progressBar", orient=HORIZONTAL, length=100, mode='determinate')
+        progressBar.pack(side=BOTTOM, padx=5, pady=5, expand=True, fill=X)
 
         self.pack(fill=BOTH, expand=True)
 
@@ -372,3 +383,4 @@ def setCaptchaImage(captchaImageLabel):
     captchaImageLabel.configure(image=captchaImage)
     captchaImageLabel.image = captchaImage
     captchaImageLabel.pack()
+

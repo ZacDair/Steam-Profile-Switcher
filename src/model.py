@@ -72,9 +72,12 @@ def captchaNeeded():
 
 def tryToLogin(username, password, twoFA, captcha, gid, sessionID):
     rsaData = steamLogin.getRSAData(username)
-    doNotCache = steamLogin.getDoNotCache()
-    timestamp = steamLogin.getTimestamp(rsaData)
-    encryptedPass = steamLogin.getEncryptedPassword(rsaData, password)
-    loginResponse = steamLogin.requestToDoLogin(doNotCache, encryptedPass, username, twoFA,
-                                                gid, captcha, sessionID, timestamp)
-    return loginResponse
+    if rsaData['success'] == 'false':
+        return "An Error Occurred while logging in..."
+    else:
+        doNotCache = steamLogin.getDoNotCache()
+        timestamp = steamLogin.getTimestamp(rsaData)
+        encryptedPass = steamLogin.getEncryptedPassword(rsaData, password)
+        loginResponse = steamLogin.requestToDoLogin(doNotCache, encryptedPass, username, twoFA,
+                                                    gid, captcha, sessionID, timestamp)
+        return loginResponse

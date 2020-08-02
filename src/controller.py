@@ -1,12 +1,15 @@
-from tkinter import TclError, END
+import time
+from tkinter import END
 import view
 import model
+import threading
 
 # Create and store a reference to our application's main window and children
 mainWindow = view.createMainWindow()
 mainWindowChildren = mainWindow.children
 
-# Check to see if we are logged in
+
+# Check to see if we are logged in update label accordingly
 label = view.getStatusLabel(mainWindow)
 loginStatus, loggedIn = model.checkLogin()
 label.configure(fg="blue", text=loginStatus)
@@ -39,12 +42,14 @@ def triggerLoginLogic(event):
         inputFrame = loginWindow.children.get("inputFrame")
         labelFrame = loginWindow.children.get("labelFrame")
         buttonFrame = loginWindow.children.get("controlFrame")
+        progressFrame = loginWindow.children.get("progressFrame")
         usernameInput = inputFrame.children.get("usernameInput")
         passwordInput = inputFrame.children.get("passwordInput")
         twoFAInput = inputFrame.children.get("twoFAInput")
         captchaInput = inputFrame.children.get("captchaInput")
         captchaImageLabel = labelFrame.children.get("captchaImageLabel")
         loginButton = buttonFrame.children.get("loginButton")
+        progressBar = progressFrame.children.get("progressBar")
 
         # Check if we need a captcha
         captchaNeeded, sessionID, gid = model.captchaNeeded()
@@ -52,14 +57,26 @@ def triggerLoginLogic(event):
             # Set captcha image label to the stored image
             view.setCaptchaImage(captchaImageLabel)
 
+        # Update our progress bar
+        def updateProgressBar():
+            while progressBar['value'] <= 100:
+                progressBar['value'] = progressBar['value'] + 3.33
+                time.sleep(1)
+
         # Retrieve data from our input fields and attempt to login
         def doLogin():
             username = usernameInput.get()
             password = passwordInput.get()
             twoFA = twoFAInput.get()
             captchaCode = captchaInput.get()
-            res = model.tryToLogin(username, password, twoFA, captchaCode, gid, sessionID)
-            print(res)
+            thread = threading.Thread(target=model.tryToLogin, args=(username, password, twoFA,
+                                                                     captchaCode, gid, sessionID))
+            thread.daemon = True
+            thread.start()
+            progressBarThread = threading.Thread(target=updateProgressBar)
+            progressBarThread.daemon = True
+            progressBarThread.start()
+
         loginButton.configure(command=doLogin)
     mainWindowLabel = view.getStatusLabel(mainWindow)
     mainWindowLabel.configure(fg="blue", text=loginStatusString)
