@@ -30,4 +30,8 @@ More updates and info soon.
 - [ ] Test captcha image display  
 - [ ] Log out functionality (Research and implement)  
 - [ ] Switch functionality needs to be implemented and triggered by the button  
+- [ ] Clean and Optimize (recurrent process)  
+- [ ] Convert project to launch properly on main.py run  
+- [ ] Add dependecies error checking  
+- [ ] Package and create installer  
 
