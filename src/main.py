@@ -3,9 +3,7 @@ from tkinter import *
 from tkinter import scrolledtext
 from tkinter.filedialog import askopenfilename
 
-import configFileValidation
-import profileValidation
-
+from src import profileValidation, configFileValidation
 
 # Create our applications main window
 masterWindow = Tk()
@@ -144,6 +142,7 @@ def saveNewProfileDetails(inputBoxes, profileWindow):
             newProfileData.append(x.get())
     if profileValidation.createNewProfile(newProfileData):
         scrollBox.insert(END, newProfileData[0])
+        profiles.append(newProfileData[0])
     profileWindow.destroy()
 
 
