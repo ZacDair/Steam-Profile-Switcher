@@ -11,3 +11,12 @@ These profiles can then be switched easily.
 To achieve this functionality a reverse engineered version of Steam's login system was required.  
   
 More updates and info soon. 
+
+[X] MVC base structure implemented  
+[X] Create profile functionality  
+[X] Delete profile functionality  
+[X] GUI to support our features  
+[X] Revese engineered Steam login  
+[] Improve login time (30secs is way too long)  
+[] Convert login to a background process  
+[] Switch functionality needs to be implemented and triggered by the button  
