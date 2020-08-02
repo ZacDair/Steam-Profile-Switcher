@@ -9,10 +9,16 @@ mainWindow = view.createMainWindow()
 mainWindowChildren = mainWindow.children
 
 
-# Check to see if we are logged in update label accordingly
-label = view.getStatusLabel(mainWindow)
-loginStatus, loggedIn = model.checkLogin()
-label.configure(fg="blue", text=loginStatus)
+# Check to see if we are logged in update label accordingly using a thread
+def updateStatusLabel():
+    label = view.getStatusLabel(mainWindow)
+    loginStatus, loggedIn = model.checkLogin()
+    label.configure(fg="blue", text=loginStatus)
+
+
+updateStatusLabelThread = threading.Thread(target=updateStatusLabel)
+updateStatusLabelThread.daemon = True
+updateStatusLabelThread.start()
 
 
 # Ask model to find our profiles, then update our view accordingly
@@ -31,7 +37,7 @@ def triggerSelectionLogic(event):
         view.selection = profileDetails["name"].strip("\n")
 
 
-# Event triggered by login button, attempts a login (TODO: potential threading needed to create a please wait)
+# Event triggered by login button, attempts a login
 def triggerLoginLogic(event):
     loginStatusString, loginStatusBool = model.checkLogin()
     if not loginStatusBool:
@@ -57,13 +63,13 @@ def triggerLoginLogic(event):
             # Set captcha image label to the stored image
             view.setCaptchaImage(captchaImageLabel)
 
-        # Update our progress bar
+        # function to update our progress bar when called
         def updateProgressBar():
             while progressBar['value'] <= 100:
-                progressBar['value'] = progressBar['value'] + 3.33
-                time.sleep(1)
+                progressBar['value'] = progressBar['value'] + 0.7325
+                time.sleep(0.18)
 
-        # Retrieve data from our input fields and attempt to login
+        # Retrieve data from our input fields and attempt to login using a thread
         def doLogin():
             username = usernameInput.get()
             password = passwordInput.get()
@@ -73,11 +79,15 @@ def triggerLoginLogic(event):
                                                                      captchaCode, gid, sessionID))
             thread.daemon = True
             thread.start()
+
             progressBarThread = threading.Thread(target=updateProgressBar)
             progressBarThread.daemon = True
             progressBarThread.start()
 
+        # Set loginButton event to run the doLogin function above
         loginButton.configure(command=doLogin)
+
+    # Edit our main window label
     mainWindowLabel = view.getStatusLabel(mainWindow)
     mainWindowLabel.configure(fg="blue", text=loginStatusString)
 
@@ -110,6 +120,7 @@ def createProfile(window):
     newProfileData.append(bioInput.get('1.0', END))
     newProfileData.append(imageInput.get())
 
+    # If a new profile was saved, clear and repopulate the scrollBox else generate an alert
     if model.saveProfile(newProfileData):
         view.clearScrollBox(scrollBox)
         updateProfileList()
@@ -162,7 +173,7 @@ configButton = topFrame.children.get("configButton")
 
 deleteProfileButton.configure(command=createDeleteProfileWindow)
 createProfileButton.configure(command=createProfileCreateWindow)
-helpButton.configure(command=lambda: view.createAlertWindow(mainWindow, "Help will go here...\n.\n.\nthis should be a good help notice"))
+helpButton.configure(command=lambda: view.createAlertWindow(mainWindow, "Help will go here..."))
 configButton.configure(command=lambda: view.createConfigWindow(mainWindow))
 
 # Initial check for profiles, either populates the scrollBox, or will create an empty dir if needed

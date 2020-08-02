@@ -245,7 +245,7 @@ class LoginLayout(Frame):
         exitButton = Button(controlFrame, name="exitButton", text="Exit", command=loginWindow.destroy)
         exitButton.pack(side=RIGHT, padx=5, pady=5, expand=True, fill=X)
 
-        loginResponseLabel = Label(progressFrame, name="loginResponseLabel", text="this is a test")
+        loginResponseLabel = Label(progressFrame, name="loginResponseLabel")
         loginResponseLabel.pack(side=BOTTOM, padx=5, pady=5, anchor=NW)
 
         progressBar = Progressbar(progressFrame, name="progressBar", orient=HORIZONTAL, length=100, mode='determinate')

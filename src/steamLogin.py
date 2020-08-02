@@ -61,9 +61,7 @@ def requestToDoLogin(donotcache, password, username, twoFactorCode, gid, captcha
             }
     cookies = {"sessionid": sessionID}
     req = requests.post(url, data=body, cookies=cookies)
-    print(req.cookies)
-    print(req.headers)
-    print(req.text)
+    return req.cookies, req.text
 
 
 # Check are we required to input a captcha by getting the html, checking to find a captcha id -1 means none needed

@@ -76,3 +76,17 @@ def saveConfigsToFile(configDict):
         configFile.write(x + configDict[x.strip(":")] + "\n")
     configFile.close()
     print("Saved new configurations to config.cfg")
+
+
+# Save request response as configs
+def saveReqRespAsConfig(cookies, content):
+    responseData = []
+    for x in cookies:
+        temp = str(x).split(" ")
+        responseData.append(temp[1])
+    contentList = str(content).split(",")
+    # Ignore the first 5 elements grab 6th ie(transfer params)
+    contentList = contentList[5:len(contentList)]
+    print(responseData)
+    print(contentList)
+

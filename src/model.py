@@ -78,6 +78,6 @@ def tryToLogin(username, password, twoFA, captcha, gid, sessionID):
         doNotCache = steamLogin.getDoNotCache()
         timestamp = steamLogin.getTimestamp(rsaData)
         encryptedPass = steamLogin.getEncryptedPassword(rsaData, password)
-        loginResponse = steamLogin.requestToDoLogin(doNotCache, encryptedPass, username, twoFA,
+        responseCookies, responseText = steamLogin.requestToDoLogin(doNotCache, encryptedPass, username, twoFA,
                                                     gid, captcha, sessionID, timestamp)
-        return loginResponse
+        return configFileValidation.saveReqRespAsConfig(responseCookies, responseText)
