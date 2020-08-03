@@ -70,14 +70,33 @@ def captchaNeeded():
     return steamLogin.CaptchaRequired()
 
 
+# Clean the response cookies and response content into a config dict
+def cleanToList(cookies, content):
+    configs = []
+    for x in cookies:
+        temp = str(x).split(" ")
+        configs.append(temp[1])
+    contentList = str(content).split(",")
+    # Ignore the first 5 elements grab 6th ie(transfer params)
+    contentList = contentList[5:len(contentList)]
+    for x in contentList:
+        configs.append(x)
+    print("\n\n\nConfigs: ")
+    for x in configs:
+        print(x)
+
+
+# Attempt to login with our given details, store and process our results
 def tryToLogin(username, password, twoFA, captcha, gid, sessionID):
     rsaData = steamLogin.getRSAData(username)
     if rsaData['success'] == 'false':
-        return "An Error Occurred while logging in..."
+        return "Username Error"
     else:
         doNotCache = steamLogin.getDoNotCache()
         timestamp = steamLogin.getTimestamp(rsaData)
         encryptedPass = steamLogin.getEncryptedPassword(rsaData, password)
         responseCookies, responseText = steamLogin.requestToDoLogin(doNotCache, encryptedPass, username, twoFA,
-                                                    gid, captcha, sessionID, timestamp)
-        return configFileValidation.saveReqRespAsConfig(responseCookies, responseText)
+                                                                    gid, captcha, sessionID, timestamp)
+
+        cleanToList(responseCookies, responseText)
+        return

@@ -56,6 +56,7 @@ def triggerLoginLogic(event):
         captchaImageLabel = labelFrame.children.get("captchaImageLabel")
         loginButton = buttonFrame.children.get("loginButton")
         progressBar = progressFrame.children.get("progressBar")
+        responseLabel = progressFrame.children.get("loginResponseLabel")
 
         # Check if we need a captcha
         captchaNeeded, sessionID, gid = model.captchaNeeded()
@@ -63,9 +64,11 @@ def triggerLoginLogic(event):
             # Set captcha image label to the stored image
             view.setCaptchaImage(captchaImageLabel)
 
-        # function to update our progress bar when called
+        # function to update our progress bar when called - conditional check to see if a thread gets stopped
         def updateProgressBar():
-            while progressBar['value'] <= 100:
+            activeThreads = threading.activeCount()
+            while progressBar['value'] <= 100 and activeThreads >= 3:
+                activeThreads = threading.activeCount()
                 progressBar['value'] = progressBar['value'] + 0.7325
                 time.sleep(0.18)
 
@@ -75,17 +78,25 @@ def triggerLoginLogic(event):
             password = passwordInput.get()
             twoFA = twoFAInput.get()
             captchaCode = captchaInput.get()
-            thread = threading.Thread(target=model.tryToLogin, args=(username, password, twoFA,
-                                                                     captchaCode, gid, sessionID))
-            thread.daemon = True
-            thread.start()
+            loginResponse = model.tryToLogin(username, password, twoFA, captchaCode, gid, sessionID)
 
-            progressBarThread = threading.Thread(target=updateProgressBar)
+            # Update our label according to our login response
+            if loginResponse == "Username Error":
+                responseLabel.configure(fg="red", text="An error occurred please check your username...")
+
+        # Function creates a thread and runs the doLogin
+        def callDoLogin():
+            loginThread = threading.Thread(target=doLogin, args=())
+            loginThread.daemon = True
+            loginThread.start()
+
+            # Update the progress bar while function runs
+            progressBarThread = threading.Thread(target=updateProgressBar, args=())
             progressBarThread.daemon = True
             progressBarThread.start()
 
         # Set loginButton event to run the doLogin function above
-        loginButton.configure(command=doLogin)
+        loginButton.configure(command=callDoLogin)
 
     # Edit our main window label
     mainWindowLabel = view.getStatusLabel(mainWindow)
