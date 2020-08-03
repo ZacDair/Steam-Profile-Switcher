@@ -27,7 +27,7 @@ More updates and info soon.
 - [ ] Help content to be written  
 - [ ] Merge old config window functionality
 - [ ] Fix profile details image display  
-- [ ] Test captcha image display  
+- [x] Test captcha image display  
 - [ ] Log out functionality (Research and implement)  
 - [ ] Switch functionality needs to be implemented and triggered by the button  
 - [ ] Clean and Optimize (reocurring process)  
