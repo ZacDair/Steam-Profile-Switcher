@@ -67,6 +67,7 @@ def triggerLoginLogic(event):
         # function to update our progress bar when called - conditional check to see if a thread gets stopped
         def updateProgressBar():
             activeThreads = threading.activeCount()
+            progressBar['value'] = 0
             while progressBar['value'] <= 100 and activeThreads >= 3:
                 activeThreads = threading.activeCount()
                 progressBar['value'] = progressBar['value'] + 0.7325
@@ -74,15 +75,24 @@ def triggerLoginLogic(event):
 
         # Retrieve data from our input fields and attempt to login using a thread
         def doLogin():
+            responseLabel.configure(fg="black", text="")
             username = usernameInput.get()
             password = passwordInput.get()
             twoFA = twoFAInput.get()
             captchaCode = captchaInput.get()
-            loginResponse = model.tryToLogin(username, password, twoFA, captchaCode, gid, sessionID)
-
-            # Update our label according to our login response
-            if loginResponse == "Username Error":
-                responseLabel.configure(fg="red", text="An error occurred please check your username...")
+            if len(password) != 0:
+                loginResponse = model.tryToLogin(username, password, twoFA, captchaCode, gid, sessionID)
+                # Update our label according to our login response
+                if loginResponse == "Username Error":
+                    responseLabel.configure(fg="red", text="An error occurred please check your username...")
+                elif loginResponse == "Connection Error":
+                    responseLabel.configure(fg="red", text="An connection error occurred...")
+                elif loginResponse == "Login Complete":
+                    responseLabel.configure(fg="green", text="Successfully Logged in...")
+                else:
+                    responseLabel.configure(fg="red", text=loginResponse)
+            else:
+                responseLabel.configure(fg="red", text="Please enter a password...")
 
         # Function creates a thread and runs the doLogin
         def callDoLogin():

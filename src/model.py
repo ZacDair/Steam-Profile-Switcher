@@ -76,14 +76,16 @@ def cleanToList(cookies, content):
     for x in cookies:
         temp = str(x).split(" ")
         configs.append(temp[1])
+    content = content.replace('"transfer_parameters":{"', '')
     contentList = str(content).split(",")
     # Ignore the first 5 elements grab 6th ie(transfer params)
     contentList = contentList[5:len(contentList)]
     for x in contentList:
+        x = x.replace(':', '=')
+        x = x.replace('"', '')
+        x = x.replace('}}', '')
         configs.append(x)
-    print("\n\n\nConfigs: ")
-    for x in configs:
-        print(x)
+    return configs
 
 
 # Attempt to login with our given details, store and process our results
@@ -97,6 +99,14 @@ def tryToLogin(username, password, twoFA, captcha, gid, sessionID):
         encryptedPass = steamLogin.getEncryptedPassword(rsaData, password)
         responseCookies, responseText = steamLogin.requestToDoLogin(doNotCache, encryptedPass, username, twoFA,
                                                                     gid, captcha, sessionID, timestamp)
-
-        cleanToList(responseCookies, responseText)
-        return
+        temp = responseText.split(",")
+        responseLoginComplete = temp[2].replace(",", '')
+        responseLoginComplete = responseLoginComplete.replace('"', "")
+        if responseText.startswith('{"success":true') and responseLoginComplete == "login_complete:true":
+            configList = cleanToList(responseCookies, responseText)
+            configFileValidation.saveConfigListToFile(configList)
+            return "Login Complete"
+        else:
+            if responseLoginComplete.startswith("message:"):
+                return responseLoginComplete[8:len(responseLoginComplete)]
+            return "Connection Error"

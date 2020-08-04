@@ -141,7 +141,6 @@ def checkLogin():
 
 # Get RSA Data
 def getRSAData(username):
-    print(requestToGetRsaKey(username))
     return requestToGetRsaKey(username)
 
 

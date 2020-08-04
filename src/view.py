@@ -35,7 +35,7 @@ class MainLayout(Frame):
         profileDetailsFrame.pack(side=RIGHT, fill=BOTH, expand=True)
 
         # Add our topFrame elements (status label, config button)
-        statusLabel = Label(topFrame, name="statusLabel", text=statusString)
+        statusLabel = Label(topFrame, name="statusLabel", relief=RAISED, text=statusString)
         statusLabel.pack(side=LEFT, padx=5, pady=5)
         configButton = Button(topFrame, name="configButton", text="Configs")
         configButton.pack(side=RIGHT, padx=5, pady=5)

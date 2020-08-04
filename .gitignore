@@ -2,3 +2,4 @@ venv
 Profiles
 __pycache__/
 .idea
+config.cfg
