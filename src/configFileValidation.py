@@ -2,49 +2,45 @@ import os
 
 # Init variables
 configFilename = "config.cfg"
-configFileRequirements = ["sessionID:", "steamID64:", "authCode:", "countryCode:"]
-requirementCount = len(configFileRequirements)
+configFilePath = "../"+configFilename
 
 
 # Create the config file based on the requirements list
 def createConfigFile():
     print("Creating file...")
-    configFile = open(configFilename, "w+")
-    for x in configFileRequirements:
-        configFile.write(x + "\n")
+    configFile = open(configFilePath, "w+")
     configFile.close()
 
 
 # Validate the contents of the config file
 def validateConfigFile():
-    configFile = open(configFilename, "r")
-    lines = configFile.readlines()
-    configFile.close()
-    isValid = True
+    contents = getConfigs()
+    isValid = False
 
     # Cycle through the file contents if its more than or equal to the requirements
-    if len(lines) >= requirementCount:
-        i = 0
-        while i < requirementCount:
+    keys = contents.keys()
+    for key in keys:
+        try:
+            if key == "steamLoginSecure" or key == "steamid" or key == "steamMachineAuth"+contents["steamid"]:
+                isValid = True
+        except KeyError:
+            print("Steam ID missing from the config.cfg")
 
-            # Check our lines start with the requirements
-            if not lines[i].startswith(configFileRequirements[i]):
-                isValid = False
-            i = i + 1
-    else:
-        isValid = False
-
-    # If the file was not valid, recreate a valid version
+    # If the file was create an empty one
     if not isValid:
         createConfigFile()
+        return False
+
+    else:
+        return True
 
 
 # Function to see if a config file exists
 def findConfigFile():
     # Check if the config.cfg exists
-    if os.path.exists(configFilename):
+    if os.path.exists(configFilePath):
         validateConfigFile()
-        print("Config File is ok...")
+        print("Config File is valid")
     else:
         print("Config file was missing, creating one now...")
         createConfigFile()
@@ -52,36 +48,32 @@ def findConfigFile():
 
 # Retrieve configuration data from the config file
 def getConfigs():
-    validateConfigFile()
-    configFile = open(configFilename, "r")
+    configFile = open(configFilePath, "r")
     lines = configFile.readlines()
     configFile.close()
-    configDict = {"sessionID": "None",
-                  "steamID64": "None",
-                  "authCode": "None",
-                  "countryCode": "None"}
+    configs = {}
     for line in lines:
-        temp = line.split(":")
+        temp = line.split("=")
         try:
-            configDict[temp[0]] = temp[1].strip("\n")
+            configs[temp[0]] = temp[1].strip("\n")
         except KeyError:
             print("Error " + temp[0] + " was not a key in the config dict")
-    return configDict
+    return configs
 
 
-# Save the configs to the config.cfg file
-def saveConfigsToFile(configDict):
-    configFile = open(configFilename, "w+")
-    for x in configFileRequirements:
-        configFile.write(x + configDict[x.strip(":")] + "\n")
-    configFile.close()
-    print("Saved new configurations to config.cfg")
-
-
-# Save request response as configs
+# Save request response as configs into the cfg file
 def saveConfigListToFile(configList):
-    configFile = open(("../"+configFilename), "w+")
+    configFile = open(configFilePath, "a")
     for x in configList:
         configFile.write(x + "\n")
     configFile.close()
     print("Saved new configurations to config.cfg")
+
+
+# Store a single value into the config file
+def saveSingleConfigToFile(configName, configValue):
+    configFile = open(configFilePath, "w+")
+    configString = configName + "=" + configValue
+    configFile.write(configString + "\n")
+    configFile.close()
+    print("Saved " + configName + " to config.cfg")

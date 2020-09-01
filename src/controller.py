@@ -13,7 +13,11 @@ mainWindowChildren = mainWindow.children
 def updateStatusLabel():
     label = view.getStatusLabel(mainWindow)
     loginStatus, loggedIn = model.checkLogin()
-    label.configure(fg="blue", text=loginStatus)
+    if loggedIn:
+        label.configure(fg="green", text=loginStatus)
+        label.unbind('<Button-1>')
+    else:
+        label.configure(fg="blue", text=loginStatus)
 
 
 updateStatusLabelThread = threading.Thread(target=updateStatusLabel)
@@ -39,78 +43,72 @@ def triggerSelectionLogic(event):
 
 # Event triggered by login button, attempts a login
 def triggerLoginLogic(event):
-    loginStatusString, loginStatusBool = model.checkLogin()
-    if not loginStatusBool:
-        # Create our login window
-        loginWindow = view.createLoginWindow(mainWindow)
+    # Create our login window
+    loginWindow = view.createLoginWindow(mainWindow)
 
-        # Get our login window elements
-        inputFrame = loginWindow.children.get("inputFrame")
-        labelFrame = loginWindow.children.get("labelFrame")
-        buttonFrame = loginWindow.children.get("controlFrame")
-        progressFrame = loginWindow.children.get("progressFrame")
-        usernameInput = inputFrame.children.get("usernameInput")
-        passwordInput = inputFrame.children.get("passwordInput")
-        twoFAInput = inputFrame.children.get("twoFAInput")
-        captchaInput = inputFrame.children.get("captchaInput")
-        captchaImageLabel = labelFrame.children.get("captchaImageLabel")
-        loginButton = buttonFrame.children.get("loginButton")
-        progressBar = progressFrame.children.get("progressBar")
-        responseLabel = progressFrame.children.get("loginResponseLabel")
+    # Get our login window elements
+    inputFrame = loginWindow.children.get("inputFrame")
+    labelFrame = loginWindow.children.get("labelFrame")
+    buttonFrame = loginWindow.children.get("controlFrame")
+    progressFrame = loginWindow.children.get("progressFrame")
+    usernameInput = inputFrame.children.get("usernameInput")
+    passwordInput = inputFrame.children.get("passwordInput")
+    twoFAInput = inputFrame.children.get("twoFAInput")
+    captchaInput = inputFrame.children.get("captchaInput")
+    captchaImageLabel = labelFrame.children.get("captchaImageLabel")
+    loginButton = buttonFrame.children.get("loginButton")
+    progressBar = progressFrame.children.get("progressBar")
+    responseLabel = progressFrame.children.get("loginResponseLabel")
 
-        # Check if we need a captcha
-        captchaNeeded, sessionID, gid = model.captchaNeeded()
-        if captchaNeeded:
-            # Set captcha image label to the stored image
-            view.setCaptchaImage(captchaImageLabel)
+    # Check if we need a captcha
+    captchaNeeded, sessionID, gid = model.captchaNeeded()
+    if captchaNeeded:
+        # Set captcha image label to the stored image
+        view.setCaptchaImage(captchaImageLabel)
 
-        # function to update our progress bar when called - conditional check to see if a thread gets stopped
-        def updateProgressBar():
+    # function to update our progress bar when called - conditional check to see if a thread gets stopped
+    def updateProgressBar():
+        activeThreads = threading.activeCount()
+        progressBar['value'] = 0
+        while progressBar['value'] <= 100 and activeThreads >= 3:
             activeThreads = threading.activeCount()
-            progressBar['value'] = 0
-            while progressBar['value'] <= 100 and activeThreads >= 3:
-                activeThreads = threading.activeCount()
-                progressBar['value'] = progressBar['value'] + 0.7325
-                time.sleep(0.18)
+            progressBar['value'] = progressBar['value'] + 0.7325
+            time.sleep(0.18)
 
-        # Retrieve data from our input fields and attempt to login using a thread
-        def doLogin():
-            responseLabel.configure(fg="black", text="")
-            username = usernameInput.get()
-            password = passwordInput.get()
-            twoFA = twoFAInput.get()
-            captchaCode = captchaInput.get()
-            if len(password) != 0:
-                loginResponse = model.tryToLogin(username, password, twoFA, captchaCode, gid, sessionID)
-                # Update our label according to our login response
-                if loginResponse == "Username Error":
-                    responseLabel.configure(fg="red", text="An error occurred please check your username...")
-                elif loginResponse == "Connection Error":
-                    responseLabel.configure(fg="red", text="An connection error occurred...")
-                elif loginResponse == "Login Complete":
-                    responseLabel.configure(fg="green", text="Successfully Logged in...")
-                else:
-                    responseLabel.configure(fg="red", text=loginResponse)
+    # Retrieve data from our input fields and attempt to login using a thread
+    def doLogin():
+        responseLabel.configure(fg="black", text="")
+        username = usernameInput.get()
+        password = passwordInput.get()
+        twoFA = twoFAInput.get()
+        captchaCode = captchaInput.get()
+        if len(password) != 0:
+            loginResponse = model.tryToLogin(username, password, twoFA, captchaCode, gid, sessionID)
+            # Update our label according to our login response
+            if loginResponse == "Username Error":
+                responseLabel.configure(fg="red", text="An error occurred please check your username...")
+            elif loginResponse == "Connection Error":
+                responseLabel.configure(fg="red", text="An connection error occurred...")
+            elif loginResponse == "Login Complete":
+                responseLabel.configure(fg="green", text="Successfully Logged in...")
             else:
-                responseLabel.configure(fg="red", text="Please enter a password...")
+                responseLabel.configure(fg="red", text=loginResponse)
+        else:
+            responseLabel.configure(fg="red", text="Please enter a password...")
 
-        # Function creates a thread and runs the doLogin
-        def callDoLogin():
-            loginThread = threading.Thread(target=doLogin, args=())
-            loginThread.daemon = True
-            loginThread.start()
+    # Function creates a thread and runs the doLogin
+    def callDoLogin():
+        loginThread = threading.Thread(target=doLogin, args=())
+        loginThread.daemon = True
+        loginThread.start()
 
-            # Update the progress bar while function runs
-            progressBarThread = threading.Thread(target=updateProgressBar, args=())
-            progressBarThread.daemon = True
-            progressBarThread.start()
+        # Update the progress bar while function runs
+        progressBarThread = threading.Thread(target=updateProgressBar, args=())
+        progressBarThread.daemon = True
+        progressBarThread.start()
 
-        # Set loginButton event to run the doLogin function above
-        loginButton.configure(command=callDoLogin)
-
-    # Edit our main window label
-    mainWindowLabel = view.getStatusLabel(mainWindow)
-    mainWindowLabel.configure(fg="blue", text=loginStatusString)
+    # Set loginButton event to run the doLogin function above
+    loginButton.configure(command=callDoLogin)
 
 
 # Calls the model to delete the selected profile
@@ -127,7 +125,6 @@ def deleteProfile(window):
 # Calls the model to create the profile
 def createProfile(window):
     newProfileData = []
-
     # Retrieve all of our frames and input elements
     inputFrame = window.children.get("inputFrame")
     avatarFrame = inputFrame.children.get("avatarFrame")
@@ -135,12 +132,10 @@ def createProfile(window):
     nameInput = inputFrame.children.get("nameInput")
     imageInput = avatarFrame.children.get("imageInput")
     bioInput = bioFrame.children.get("bioInput")
-
     # Retrieve the data inputted
     newProfileData.append(nameInput.get())
     newProfileData.append(bioInput.get('1.0', END))
     newProfileData.append(imageInput.get())
-
     # If a new profile was saved, clear and repopulate the scrollBox else generate an alert
     if model.saveProfile(newProfileData):
         view.clearScrollBox(scrollBox)

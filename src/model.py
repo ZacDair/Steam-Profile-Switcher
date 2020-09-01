@@ -21,11 +21,6 @@ def getConfigs():
     return configFileValidation.getConfigs()
 
 
-# Save the configurations stored in the dict passed as an argument
-def saveConfigs(configs):
-    configFileValidation.saveConfigsToFile(configs)
-
-
 # Create and save a new profile
 def saveProfile(profileData):
     return profileValidation.createNewProfile(profileData)
@@ -57,12 +52,10 @@ def getProfileDetails(index):
 # Check if we are logged into Steam, returns a string and a boolean
 def checkLogin():
     response = steamLogin.checkLogin()
-    if response == "No Connection":
-        return "Please check Steam server status...", False
-    elif response:
-        return "Logged in to Steam", True
+    if response:
+        return "Logged in as " + response, True
     else:
-        return "Please click here to login", False
+        return "Please login", False
 
 
 # Send our first login request to get the rsa key and check if we need a captcha
@@ -104,6 +97,7 @@ def tryToLogin(username, password, twoFA, captcha, gid, sessionID):
         responseLoginComplete = responseLoginComplete.replace('"', "")
         if responseText.startswith('{"success":true') and responseLoginComplete == "login_complete:true":
             configList = cleanToList(responseCookies, responseText)
+            configList.append("username="+username)
             configFileValidation.saveConfigListToFile(configList)
             return "Login Complete"
         else:
