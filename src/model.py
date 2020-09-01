@@ -21,11 +21,6 @@ def getConfigs():
     return configFileValidation.getConfigs()
 
 
-# Save the configurations stored in the dict passed as an argument
-def saveConfigs(configs):
-    configFileValidation.saveConfigsToFile(configs)
-
-
 # Create and save a new profile
 def saveProfile(profileData):
     return profileValidation.createNewProfile(profileData)
@@ -57,12 +52,10 @@ def getProfileDetails(index):
 # Check if we are logged into Steam, returns a string and a boolean
 def checkLogin():
     response = steamLogin.checkLogin()
-    if response == "No Connection":
-        return "Please check Steam server status...", False
-    elif response:
-        return "Logged in to Steam", True
+    if response:
+        return "Logged in as " + response, True
     else:
-        return "Please click here to login", False
+        return "Please login", False
 
 
 # Send our first login request to get the rsa key and check if we need a captcha
@@ -70,11 +63,44 @@ def captchaNeeded():
     return steamLogin.CaptchaRequired()
 
 
+# Clean the response cookies and response content into a config dict
+def cleanToList(cookies, content):
+    configs = []
+    for x in cookies:
+        temp = str(x).split(" ")
+        configs.append(temp[1])
+    content = content.replace('"transfer_parameters":{"', '')
+    contentList = str(content).split(",")
+    # Ignore the first 5 elements grab 6th ie(transfer params)
+    contentList = contentList[5:len(contentList)]
+    for x in contentList:
+        x = x.replace(':', '=')
+        x = x.replace('"', '')
+        x = x.replace('}}', '')
+        configs.append(x)
+    return configs
+
+
+# Attempt to login with our given details, store and process our results
 def tryToLogin(username, password, twoFA, captcha, gid, sessionID):
     rsaData = steamLogin.getRSAData(username)
-    doNotCache = steamLogin.getDoNotCache()
-    timestamp = steamLogin.getTimestamp(rsaData)
-    encryptedPass = steamLogin.getEncryptedPassword(rsaData, password)
-    loginResponse = steamLogin.requestToDoLogin(doNotCache, encryptedPass, username, twoFA,
-                                                gid, captcha, sessionID, timestamp)
-    return loginResponse
+    if rsaData['success'] == 'false':
+        return "Username Error"
+    else:
+        doNotCache = steamLogin.getDoNotCache()
+        timestamp = steamLogin.getTimestamp(rsaData)
+        encryptedPass = steamLogin.getEncryptedPassword(rsaData, password)
+        responseCookies, responseText = steamLogin.requestToDoLogin(doNotCache, encryptedPass, username, twoFA,
+                                                                    gid, captcha, sessionID, timestamp)
+        temp = responseText.split(",")
+        responseLoginComplete = temp[2].replace(",", '')
+        responseLoginComplete = responseLoginComplete.replace('"', "")
+        if responseText.startswith('{"success":true') and responseLoginComplete == "login_complete:true":
+            configList = cleanToList(responseCookies, responseText)
+            configList.append("username="+username)
+            configFileValidation.saveConfigListToFile(configList)
+            return "Login Complete"
+        else:
+            if responseLoginComplete.startswith("message:"):
+                return responseLoginComplete[8:len(responseLoginComplete)]
+            return "Connection Error"

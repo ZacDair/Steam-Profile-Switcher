@@ -1,4 +1,5 @@
 import requests
+import configFileValidation
 from urllib import request
 import re
 import time
@@ -57,13 +58,11 @@ def requestToDoLogin(donotcache, password, username, twoFactorCode, gid, captcha
             'captcha_text': captcha,
             'emailsteamid': '',
             'rsatimestamp':  timeStamp,
-            'remember_login': 'false',
+            'remember_login': 'true',
             }
     cookies = {"sessionid": sessionID}
     req = requests.post(url, data=body, cookies=cookies)
-    print(req.cookies)
-    print(req.headers)
-    print(req.text)
+    return req.cookies, req.text
 
 
 # Check are we required to input a captcha by getting the html, checking to find a captcha id -1 means none needed
@@ -73,8 +72,9 @@ def CaptchaRequired():
     captchaURL = "https://steamcommunity.com/login/rendercaptcha/?gid="
     resp = request.urlopen("https://steamcommunity.com/login/home/?goto=")
     info = resp.info()
-    cookie = str(info["Set-Cookie"]).replace("; path=/; secure", '')
+    cookie = str(info["Set-Cookie"]).replace("; Path=/; Secure; SameSite=None", '')
     sessionID = cookie.strip("sessionid=")
+    configFileValidation.saveSingleConfigToFile("sessionid", sessionID)
     html = str(resp.read())
     splitHtml = html.split(captchaNeedle)
     try:
@@ -130,20 +130,25 @@ def login(username, password):
 
 # Function sends a request to steams url if the cookies contains a secure id we can say we are logged in
 def checkLogin():
-    url = "https://steamcommunity.com/login/home/?goto="
-    resp = requests.get(url)
-    if resp.status_code == 200:
-        for x in resp.cookies:
-            if str(x).startswith("<Cookie steamLoginSecure"):
-                return True
-        return False
+    if configFileValidation.validateConfigFile():
+        configs = configFileValidation.getConfigs()
+        steamID = configs['steamid']
+        url = "https://steamcommunity.com/profiles/" + steamID
+        req = requests.get(url)
+        customUrl = req.url
+        cookies = {"steamMachineAuth" + steamID: configs["steamMachineAuth" + steamID],
+                   "steamLoginSecure": configs["steamLoginSecure"]}
+        editInfoReq = requests.get(customUrl + "edit/info", cookies=cookies)
+        if editInfoReq.url == customUrl + "edit/info":
+            return configs["username"]
+        elif str(editInfoReq.url).startswith("https://steamcommunity.com/login"):
+            return False
     else:
-        return "No Connection"
+        return False
 
 
 # Get RSA Data
 def getRSAData(username):
-    print(requestToGetRsaKey(username))
     return requestToGetRsaKey(username)
 
 
