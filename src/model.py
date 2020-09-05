@@ -104,3 +104,8 @@ def tryToLogin(username, password, twoFA, captcha, gid, sessionID):
             if responseLoginComplete.startswith("message:"):
                 return responseLoginComplete[8:len(responseLoginComplete)]
             return "Connection Error"
+
+
+# Clearing our config file acts as a logout feature
+def logout():
+    configFileValidation.createConfigFile()

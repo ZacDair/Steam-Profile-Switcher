@@ -34,9 +34,11 @@ class MainLayout(Frame):
         profileDetailsFrame = Frame(self, name="profileDetailsFrame", relief=FLAT, borderwidth=1)
         profileDetailsFrame.pack(side=RIGHT, fill=BOTH, expand=True)
 
-        # Add our topFrame elements (status label, config button)
+        # Add our topFrame elements (status label, logout button, config button)
         statusLabel = Label(topFrame, name="statusLabel", relief=RAISED, text=statusString)
         statusLabel.pack(side=LEFT, padx=5, pady=5)
+        logoutButton = Button(topFrame, name="logoutButton", text="Logout")
+        logoutButton.pack(side=RIGHT, padx=5, pady=5)
         configButton = Button(topFrame, name="configButton", text="Configs")
         configButton.pack(side=RIGHT, padx=5, pady=5)
 
@@ -365,6 +367,12 @@ def updateProfileDetails(mainWindow, profileDetails):
 def getStatusLabel(mainWindow):
     topFrame = mainWindow.children.get("topFrame")
     return topFrame.children.get("statusLabel")
+
+
+# Return the logout button widget from the main window
+def getLogoutButton(mainWindow):
+    topFrame = mainWindow.children.get("topFrame")
+    return topFrame.children.get("logoutButton")
 
 
 # Update the label with our selected profile name

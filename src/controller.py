@@ -9,20 +9,23 @@ mainWindow = view.createMainWindow()
 mainWindowChildren = mainWindow.children
 
 
-# Check to see if we are logged in update label accordingly using a thread
+# Logout Function
+def logout():
+    model.logout()
+    updateStatusLabel()
+
+
+# Check our login status, update label and activate/deactivate login/logout buttons as needed
 def updateStatusLabel():
     label = view.getStatusLabel(mainWindow)
     loginStatus, loggedIn = model.checkLogin()
     if loggedIn:
         label.configure(fg="green", text=loginStatus)
         label.unbind('<Button-1>')
+        logoutButton = view.getLogoutButton(mainWindow)
+        logoutButton.configure(command=logout)
     else:
         label.configure(fg="blue", text=loginStatus)
-
-
-updateStatusLabelThread = threading.Thread(target=updateStatusLabel)
-updateStatusLabelThread.daemon = True
-updateStatusLabelThread.start()
 
 
 # Ask model to find our profiles, then update our view accordingly
@@ -91,6 +94,7 @@ def triggerLoginLogic(event):
                 responseLabel.configure(fg="red", text="An connection error occurred...")
             elif loginResponse == "Login Complete":
                 responseLabel.configure(fg="green", text="Successfully Logged in...")
+                updateStatusLabel()
             else:
                 responseLabel.configure(fg="red", text=loginResponse)
         else:
@@ -167,6 +171,11 @@ def createProfileCreateWindow():
     else:
         print("The create window was not created...")
 
+
+# Update our login label using a thread to run the check login and update function
+updateStatusLabelThread = threading.Thread(target=updateStatusLabel)
+updateStatusLabelThread.daemon = True
+updateStatusLabelThread.start()
 
 # Event listener for the scrollBox
 scrollBox = view.getScrollBoxItem(mainWindow, "scrollBox")
