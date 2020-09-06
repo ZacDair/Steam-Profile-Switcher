@@ -3,7 +3,7 @@ import configFileValidation
 import steamLogin
 import profileEdit
 
-
+profileEdit.getCurrentProfileData("https://steamcommunity.com/id/crimsoncrisis2011/")
 
 # Validate and retrieve our profiles
 def getProfiles():
