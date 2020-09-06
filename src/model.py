@@ -1,6 +1,8 @@
 import profileValidation
 import configFileValidation
 import steamLogin
+import profileEdit
+
 
 
 # Validate and retrieve our profiles

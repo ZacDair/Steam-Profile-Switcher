@@ -25,6 +25,7 @@ def updateStatusLabel():
         logoutButton = view.getLogoutButton(mainWindow)
         logoutButton.configure(command=logout)
     else:
+        label.bind('<Button-1>', triggerLoginLogic)
         label.configure(fg="blue", text=loginStatus)
 
 
@@ -182,8 +183,8 @@ scrollBox = view.getScrollBoxItem(mainWindow, "scrollBox")
 scrollBox.bind('<<ListboxSelect>>', triggerSelectionLogic)
 
 # Event listener for the login status label
-statusLabel = view.getStatusLabel(mainWindow)
-statusLabel.bind('<Button-1>', triggerLoginLogic)
+# statusLabel = view.getStatusLabel(mainWindow)
+# statusLabel.bind('<Button-1>', triggerLoginLogic)
 
 
 # Event listeners for the main screen TODO: potentially isolate the lambda functions into local calls

@@ -74,7 +74,7 @@ def saveConfigListToFile(configList):
 
 # Store a single value into the config file
 def saveSingleConfigToFile(configName, configValue):
-    configFile = open(configFilePath, "w+")
+    configFile = open(configFilePath, "a")
     configString = configName + "=" + configValue
     configFile.write(configString + "\n")
     configFile.close()

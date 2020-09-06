@@ -133,9 +133,14 @@ def checkLogin():
     if configFileValidation.validateConfigFile():
         configs = configFileValidation.getConfigs()
         steamID = configs['steamid']
-        url = "https://steamcommunity.com/profiles/" + steamID
-        req = requests.get(url)
-        customUrl = req.url
+        try:
+            customUrl = configs["customUrl"]
+        except KeyError:
+            print("Custom Url was not in the config file...")
+            url = "https://steamcommunity.com/profiles/" + steamID
+            req = requests.get(url)
+            customUrl = req.url
+            configFileValidation.saveSingleConfigToFile("customUrl", customUrl)
         cookies = {"steamMachineAuth" + steamID: configs["steamMachineAuth" + steamID],
                    "steamLoginSecure": configs["steamLoginSecure"]}
         editInfoReq = requests.get(customUrl + "edit/info", cookies=cookies)
