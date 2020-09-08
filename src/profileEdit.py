@@ -12,20 +12,51 @@ def retrieveMiddleElement(preNeedle, postNeedle, content):
 
 # Cleans profile data such as custom url, name, bio and country from the profile html code
 def getCurrentProfileData(customUrl):
+    # Send a request to the profile page and decode and store the content
     req = requests.get(customUrl)
+    html = str(req.content)
     content = req.content.decode('utf-8')
+    print(content)
+
+    # Define our pre and post needles for each piece of data we need
     preProfileData = "g_rgProfileData = "
     postProfileData = ";"
-    preCountry = '.gif">'
-    postCountry = '</div>'
+    preLocation = '.gif">'
+    postLocation = '</div>'
+    preName = '<bdi>'
+    postName = '</bdi>'
+
+    # Use our custom method to retrieve data in between the pre and post needles
     profileData = retrieveMiddleElement(preProfileData, postProfileData, content)
+    location = retrieveMiddleElement(preLocation, postLocation, content)
+    actualName = retrieveMiddleElement(preName, postName, html)
+
+    # Convert our profileData string into a dict (as it shares the same structure)
     profileDataDict = json.loads(profileData)
-    idIndex = profileDataDict['url'].find('id')
+
+    # Add actualName to the profileDataDict
+    profileDataDict['real_name'] = actualName
+
+    # From the profileData get the custom url (trim un-needed data ie: HTTPS://Steam......"
     url = profileDataDict['url']
+    idIndex = profileDataDict['url'].find('id')
     profileDataDict['url'] = url[idIndex + 3:len(url)-1]
-    country = retrieveMiddleElement(preCountry, postCountry, content)
-    country = country.strip()
-    profileDataDict['country'] = country
+
+    # Strip leading spaces from the location data split by comma and store each location section separately
+    location = location.strip()
+    location = location.split(",")
+    # Reverse the location as its given by city, state, country if there is 3 values
+    location.reverse()
+    locationNames = ["country", "state", "city"]
+    i = 0
+    while i < len(location):
+        profileDataDict[locationNames[i]] = location[i]
+        i = i + 1
+
+    #
+
+    # print and return our profile data
+    print(profileDataDict)
     return profileDataDict
 
 
