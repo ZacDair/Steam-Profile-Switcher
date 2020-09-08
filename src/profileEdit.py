@@ -163,4 +163,14 @@ def updateProfileData(newName, newSummary):
 '''
 Getting a slight error when updating profile data as the country needs to be shorted (Ireland to IE)
 And state and city values need to be integers instead of strings
+
+GET https://steamcommunity.com//actions/QueryLocations/ with cookies
+returns a list of countries [{countrycode: US, hasstates: 1 or 0, countryname: United States}, ...]
+0-249 countries
+
+GET https://steamcommunity.com//actions/QueryLocations/IE with cookies
+returns a list of states [{countrycode: IE, statecode: 01, statename: Carlow}, ...]
+
+GET https://steamcommunity.com//actions/QueryLocations/IE/04 with cookies
+returns a list of cities [{countrycode: IE, statecode: 04, cityid: 20877, cityname: Bandon}, ...]
 '''
