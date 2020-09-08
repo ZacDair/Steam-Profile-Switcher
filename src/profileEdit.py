@@ -158,3 +158,9 @@ def updateProfileData(newName, newSummary):
     else:
         print("Config file was deemed invalid")
         return False
+
+
+'''
+Getting a slight error when updating profile data as the country needs to be shorted (Ireland to IE)
+And state and city values need to be integers instead of strings
+'''
