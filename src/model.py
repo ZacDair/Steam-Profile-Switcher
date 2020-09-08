@@ -3,7 +3,6 @@ import configFileValidation
 import steamLogin
 import profileEdit
 
-profileEdit.getCurrentProfileData("https://steamcommunity.com/id/crimsoncrisis2011/")
 
 # Validate and retrieve our profiles
 def getProfiles():
@@ -111,3 +110,15 @@ def tryToLogin(username, password, twoFA, captcha, gid, sessionID):
 # Clearing our config file acts as a logout feature
 def logout():
     configFileValidation.createConfigFile()
+
+
+# Function run all of our needed code to upload a new image, name and bio
+def UpdateProfile(newName, newBio, newAvatar):
+    isAvatarUpdated = profileEdit.uploadAvatar(newAvatar)
+    isNameAndBioUpdated = profileEdit.updateProfileData(newName, newBio)
+    if isAvatarUpdated and isNameAndBioUpdated:
+        print("The new profile is now active")
+    else:
+        print("An error occurred updating profile data")
+        print("Avatar Upload Status: ", isAvatarUpdated)
+        print("Name and Bio Upload Status: ", isNameAndBioUpdated)

@@ -16,7 +16,6 @@ def getCurrentProfileData(customUrl):
     req = requests.get(customUrl)
     html = str(req.content)
     content = req.content.decode('utf-8')
-    print(content)
 
     # Define our pre and post needles for each piece of data we need
     preProfileData = "g_rgProfileData = "
@@ -25,11 +24,14 @@ def getCurrentProfileData(customUrl):
     postLocation = '</div>'
     preName = '<bdi>'
     postName = '</bdi>'
+    preAvatar = 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/'
+    postAvatar = '_full.jpg">'
 
     # Use our custom method to retrieve data in between the pre and post needles
     profileData = retrieveMiddleElement(preProfileData, postProfileData, content)
     location = retrieveMiddleElement(preLocation, postLocation, content)
     actualName = retrieveMiddleElement(preName, postName, html)
+    avatarCode = retrieveMiddleElement(preAvatar, postAvatar, content)
 
     # Convert our profileData string into a dict (as it shares the same structure)
     profileDataDict = json.loads(profileData)
@@ -37,10 +39,16 @@ def getCurrentProfileData(customUrl):
     # Add actualName to the profileDataDict
     profileDataDict['real_name'] = actualName
 
+    # Concatenate the avatar code and leading url into a full usable url, append the url to the profileDataDict
+    profileDataDict['avatarURL'] = preAvatar+avatarCode
+
     # From the profileData get the custom url (trim un-needed data ie: HTTPS://Steam......"
     url = profileDataDict['url']
     idIndex = profileDataDict['url'].find('id')
     profileDataDict['url'] = url[idIndex + 3:len(url)-1]
+
+    # Replace all <br> tags with a \n in the bio
+    # profileDataDict['summary'] = str(profileDataDict['summary']).replace("<br>", '\n')
 
     # Strip leading spaces from the location data split by comma and store each location section separately
     location = location.strip()
@@ -52,8 +60,6 @@ def getCurrentProfileData(customUrl):
     while i < len(location):
         profileDataDict[locationNames[i]] = location[i]
         i = i + 1
-
-    #
 
     # print and return our profile data
     print(profileDataDict)
@@ -78,8 +84,6 @@ def getCookies():
 # Validates an editing request (two types of success responses, one true, and one 1)
 def validateResponse(req):
     responseContent = req.content.decode('utf-8')
-    print(req)
-    print(responseContent)
     if responseContent.startswith('{"success":true'):
         print("Successful Edit...")
         return True
@@ -88,7 +92,16 @@ def validateResponse(req):
         return True
     else:
         print("Failed Edit...")
+        print(responseContent)
         return False
+
+
+# Function that runs error checking on the profileData dict to find the location data
+def checkLocationByKey(dataDict, key):
+    try:
+        return dataDict[key]
+    except KeyError:
+        return ''
 
 
 def uploadAvatar(imagePath):
@@ -116,64 +129,32 @@ def uploadAvatar(imagePath):
         return False
 
 
-def uploadName(name):
+def updateProfileData(newName, newSummary):
     if configFileValidation.validateConfigFile():
         configs = configFileValidation.getConfigs()
         url = configs['customUrl'] + 'edit/'
+        profileData = getCurrentProfileData(configs['customUrl'])
+
+        # Check which country data needs to be sent (improvement: if there is no country, there is no state etc)
+        country = checkLocationByKey(profileData, 'country')
+        state = checkLocationByKey(profileData, 'state')
+        city = checkLocationByKey(profileData, 'city')
+
+        # Formulate our body with the data to update and old data to keep
         body = {'sessionID': configs['sessionid'], 'type': 'profileSave', 'weblink_1_title': '','weblink_1_url': '',
                 'weblink_2_title': '', 'weblink_2_url': '', 'weblink_3_title': '', 'weblink_3_url': '',
-                'personaName': name, 'real_name': '', 'customURL': '', 'country': 'IE',
-                'state': '', 'city': '', 'summary': 'test bio', 'json': 1}
+                'personaName': newName, 'real_name': profileData['real_name'], 'customURL': profileData['url'], 'country': country,
+                'state': state, 'city': city, 'summary': newSummary, 'json': 1}
         cookies = getCookies()
+        print(body)
         req = requests.post(url, data=body, cookies=cookies)
         res = validateResponse(req)
         if res:
-            print("Named Changed")
+            print("Profile Updated")
             return True
         else:
-            print("Name Change Request Failed...")
+            print("Profile Update Request Failed...")
             return False
     else:
         print("Config file was deemed invalid")
         return False
-
-
-def uploadBio(bio):
-    if configFileValidation.validateConfigFile():
-        configs = configFileValidation.getConfigs()
-        url = configs['customUrl'] + 'edit/info'
-        body = {'sessionID': configs['sessionid'], 'type': "profileSave", 'summary': bio}
-        cookies = getCookies()
-        req = requests.post(url, data=body, cookies=cookies)
-        res = validateResponse(req)
-        if res:
-            print("Bio Changed")
-            return True
-        else:
-            print("Bio Change Request Failed...")
-            return False
-    else:
-        print("Config file was deemed invalid")
-        return False
-
-'''
-sessionID:6a1914ebc5394ec1f01e23af
-type:profileSave
-weblink_1_title:
-weblink_1_url:
-weblink_2_title:
-weblink_2_url:
-weblink_3_title:
-weblink_3_url:
-personaName:Crimson Crisis 
-real_name:Zac
-customURL:crimsoncrisis2011
-country:IE
-state:
-city:
-summary:test bio
-json:1
-
-All of the above is needed in the body of the request - look into pulling current info before doing the change,
-as if left blank they overwrite whats actually there
-'''

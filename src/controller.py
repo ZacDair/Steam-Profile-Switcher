@@ -43,6 +43,13 @@ def triggerSelectionLogic(event):
     if profileDetails:
         view.updateProfileDetails(mainWindow, profileDetails)
         view.selection = profileDetails["name"].strip("\n")
+        print(profileDetails)
+        name = profileDetails['name'].strip("\n")
+        bio = ''
+        for x in profileDetails['bio']:
+            bio = bio + x
+        img = "../Profiles/" + name + "/" + profileDetails['img']
+        model.UpdateProfile(name, bio, img)
 
 
 # Event triggered by login button, attempts a login

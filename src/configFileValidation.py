@@ -74,7 +74,10 @@ def saveConfigListToFile(configList):
 
 # Store a single value into the config file
 def saveSingleConfigToFile(configName, configValue):
-    configFile = open(configFilePath, "a")
+    writeMode = "a"
+    if configName == "sessionid":
+        writeMode = "w+"
+    configFile = open(configFilePath, writeMode)
     configString = configName + "=" + configValue
     configFile.write(configString + "\n")
     configFile.close()
