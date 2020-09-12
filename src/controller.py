@@ -180,6 +180,12 @@ def createProfileCreateWindow():
         print("The create window was not created...")
 
 
+# Function creates a config window, and populates it with the configs
+def createConfigWindow():
+    configs = model.getConfigs()
+    view.createConfigWindow(mainWindow, configs)
+
+
 # Update our login label using a thread to run the check login and update function
 updateStatusLabelThread = threading.Thread(target=updateStatusLabel)
 updateStatusLabelThread.daemon = True
@@ -207,7 +213,7 @@ configButton = topFrame.children.get("configButton")
 deleteProfileButton.configure(command=createDeleteProfileWindow)
 createProfileButton.configure(command=createProfileCreateWindow)
 helpButton.configure(command=lambda: view.createAlertWindow(mainWindow, "Help will go here..."))
-configButton.configure(command=lambda: view.createConfigWindow(mainWindow))
+configButton.configure(command=createConfigWindow)
 
 # Initial check for profiles, either populates the scrollBox, or will create an empty dir if needed
 updateProfileList()
