@@ -4,6 +4,7 @@ import configFileValidation
 
 
 # Needle data finding code, splits the content by a pre and post string, in order to return the central string
+# ToDO: add error checking in case the html on the page changes
 def retrieveMiddleElement(preNeedle, postNeedle, content):
     firstHalf = content.split(preNeedle)
     secondHalf = firstHalf[1].split(postNeedle)
@@ -24,7 +25,7 @@ def getCurrentProfileData(customUrl):
     postLocation = '</div>'
     preName = '<bdi>'
     postName = '</bdi>'
-    preAvatar = 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/'
+    preAvatar = 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/avatars/'
     postAvatar = '_full.jpg">'
 
     # Use our custom method to retrieve data in between the pre and post needles
@@ -97,11 +98,32 @@ def validateResponse(req):
 
 
 # Function that runs error checking on the profileData dict to find the location data
-def checkLocationByKey(dataDict, key):
+def convertLocationToCode(dataDict):
+    country = ''
+    state = ''
+    city = ''
+
+    # Try to retrieve the location data by key
     try:
-        return dataDict[key]
+        country = dataDict["country"].strip()
+        state = dataDict["state"].strip()
+        city = dataDict["city"].strip()
     except KeyError:
-        return ''
+        print("One of the location keys was missing data...")
+
+    if country != '':
+        # Hit countries URL to find country's code
+        url = "https://steamcommunity.com/actions/QueryLocations/"
+        cookies = getCookies()
+        resp = requests.get(url, cookies=cookies)
+        countries = json.loads(resp.content)
+        countryCode = ''
+        for x in countries:
+            if x["countryname"] == country:
+                countryCode = x['countrycode']
+        '''COME BACK TO THIS AND FIGURE OUT A WAY TO LOOP THIS IN A NICE FUNCTION
+            country state and city all do the exact same thing
+        '''
 
 
 def uploadAvatar(imagePath):
@@ -134,17 +156,18 @@ def updateProfileData(newName, newSummary):
         configs = configFileValidation.getConfigs()
         url = configs['customUrl'] + 'edit/'
         profileData = getCurrentProfileData(configs['customUrl'])
-
+        print("type: ", type(profileData))
+        convertLocationToCode(profileData)
         # Check which country data needs to be sent (improvement: if there is no country, there is no state etc)
-        country = checkLocationByKey(profileData, 'country')
+        '''country = checkLocationByKey(profileData, 'country')
         state = checkLocationByKey(profileData, 'state')
-        city = checkLocationByKey(profileData, 'city')
+        city = checkLocationByKey(profileData, 'city')'''
 
         # Formulate our body with the data to update and old data to keep
         body = {'sessionID': configs['sessionid'], 'type': 'profileSave', 'weblink_1_title': '','weblink_1_url': '',
                 'weblink_2_title': '', 'weblink_2_url': '', 'weblink_3_title': '', 'weblink_3_url': '',
-                'personaName': newName, 'real_name': profileData['real_name'], 'customURL': profileData['url'], 'country': country,
-                'state': state, 'city': city, 'summary': newSummary, 'json': 1}
+                'personaName': newName, 'real_name': profileData['real_name'], 'customURL': profileData['url'], 'country': "country",
+                'state': "state", 'city': "city", 'summary': newSummary, 'json': 1}
         cookies = getCookies()
         print(body)
         req = requests.post(url, data=body, cookies=cookies)
