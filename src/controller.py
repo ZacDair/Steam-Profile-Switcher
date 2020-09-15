@@ -9,20 +9,24 @@ mainWindow = view.createMainWindow()
 mainWindowChildren = mainWindow.children
 
 
-# Check to see if we are logged in update label accordingly using a thread
+# Logout Function
+def logout():
+    model.logout()
+    updateStatusLabel()
+
+
+# Check our login status, update label and activate/deactivate login/logout buttons as needed
 def updateStatusLabel():
     label = view.getStatusLabel(mainWindow)
     loginStatus, loggedIn = model.checkLogin()
     if loggedIn:
         label.configure(fg="green", text=loginStatus)
         label.unbind('<Button-1>')
+        logoutButton = view.getLogoutButton(mainWindow)
+        logoutButton.configure(command=logout)
     else:
+        label.bind('<Button-1>', triggerLoginLogic)
         label.configure(fg="blue", text=loginStatus)
-
-
-updateStatusLabelThread = threading.Thread(target=updateStatusLabel)
-updateStatusLabelThread.daemon = True
-updateStatusLabelThread.start()
 
 
 # Ask model to find our profiles, then update our view accordingly
@@ -39,6 +43,19 @@ def triggerSelectionLogic(event):
     if profileDetails:
         view.updateProfileDetails(mainWindow, profileDetails)
         view.selection = profileDetails["name"].strip("\n")
+        name = profileDetails['name'].strip("\n")
+        bio = ''
+        for x in profileDetails['bio']:
+            bio = bio + x
+        img = "../Profiles/" + name + "/" + profileDetails['img']
+
+        def updateProfile():
+            res = model.UpdateProfile(name, bio, img)
+            view.createAlertWindow(mainWindow, res)
+
+        uploadThread = threading.Thread(target=updateProfile, args=())
+        uploadThread.daemon = True
+        uploadThread.start()
 
 
 # Event triggered by login button, attempts a login
@@ -91,6 +108,7 @@ def triggerLoginLogic(event):
                 responseLabel.configure(fg="red", text="An connection error occurred...")
             elif loginResponse == "Login Complete":
                 responseLabel.configure(fg="green", text="Successfully Logged in...")
+                updateStatusLabel()
             else:
                 responseLabel.configure(fg="red", text=loginResponse)
         else:
@@ -168,29 +186,39 @@ def createProfileCreateWindow():
         print("The create window was not created...")
 
 
+# Function creates a config window, and populates it with the configs
+def createConfigWindow():
+    configs = model.getConfigs()
+    view.createConfigWindow(mainWindow, configs)
+
+
+# Update our login label using a thread to run the check login and update function
+updateStatusLabelThread = threading.Thread(target=updateStatusLabel)
+updateStatusLabelThread.daemon = True
+updateStatusLabelThread.start()
+
 # Event listener for the scrollBox
 scrollBox = view.getScrollBoxItem(mainWindow, "scrollBox")
 scrollBox.bind('<<ListboxSelect>>', triggerSelectionLogic)
 
 # Event listener for the login status label
-statusLabel = view.getStatusLabel(mainWindow)
-statusLabel.bind('<Button-1>', triggerLoginLogic)
+# statusLabel = view.getStatusLabel(mainWindow)
+# statusLabel.bind('<Button-1>', triggerLoginLogic)
 
 
-# Event listeners for the main screen TODO: potentially isolate the lambda functions into local calls
+# Event listeners for the main screen
 controlFrame = mainWindowChildren.get("controlFrame")
 topFrame = mainWindowChildren.get("topFrame")
 
 deleteProfileButton = controlFrame.children.get("deleteProfileButton")
 createProfileButton = controlFrame.children.get("createProfileButton")
-switchProfileButton = controlFrame.children.get("switchProfileButton")
 helpButton = controlFrame.children.get("helpButton")
 configButton = topFrame.children.get("configButton")
 
 deleteProfileButton.configure(command=createDeleteProfileWindow)
 createProfileButton.configure(command=createProfileCreateWindow)
 helpButton.configure(command=lambda: view.createAlertWindow(mainWindow, "Help will go here..."))
-configButton.configure(command=lambda: view.createConfigWindow(mainWindow))
+configButton.configure(command=createConfigWindow)
 
 # Initial check for profiles, either populates the scrollBox, or will create an empty dir if needed
 updateProfileList()

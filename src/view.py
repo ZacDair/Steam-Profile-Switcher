@@ -34,9 +34,11 @@ class MainLayout(Frame):
         profileDetailsFrame = Frame(self, name="profileDetailsFrame", relief=FLAT, borderwidth=1)
         profileDetailsFrame.pack(side=RIGHT, fill=BOTH, expand=True)
 
-        # Add our topFrame elements (status label, config button)
+        # Add our topFrame elements (status label, logout button, config button)
         statusLabel = Label(topFrame, name="statusLabel", relief=RAISED, text=statusString)
         statusLabel.pack(side=LEFT, padx=5, pady=5)
+        logoutButton = Button(topFrame, name="logoutButton", text="Logout")
+        logoutButton.pack(side=RIGHT, padx=5, pady=5)
         configButton = Button(topFrame, name="configButton", text="Configs")
         configButton.pack(side=RIGHT, padx=5, pady=5)
 
@@ -61,8 +63,6 @@ class MainLayout(Frame):
         helpButton.pack(side=LEFT, padx=5, pady=5)
         deleteProfileButton = Button(controlFrame, name="deleteProfileButton", text="Delete Profile")
         deleteProfileButton.pack(side=RIGHT, padx=5, pady=5)
-        switchProfileButton = Button(controlFrame, name="switchProfileButton", text="Switch Profile")
-        switchProfileButton.pack(side=RIGHT, padx=5, pady=5)
         createProfileButton = Button(controlFrame, name="createProfileButton", text="Create Profile")
         createProfileButton.pack(side=RIGHT, padx=5, pady=5)
 
@@ -91,23 +91,22 @@ class DeleteProfileLayout(Frame):
 
 # Class containing the layout for the config window
 class ConfigLayout(Frame):
-    def __init__(self, configWindow):
+    def __init__(self, configWindow, configDict):
         super().__init__()
-        self.initUI(configWindow)
+        self.initUI(configWindow, configDict)
 
-    def initUI(self, configWindow):
+    def initUI(self, configWindow, configDict):
         configWindow.title("Configurations")
 
-        usernameLabel = Label(configWindow, name="usernameLabel", text="Username: ")
-        usernameLabel.pack(side=TOP, padx=5, pady=5, anchor=NW)
-        sessionIDLabel = Label(configWindow, name="sessionIDLabel", text="Session ID: ")
-        sessionIDLabel.pack(side=TOP, padx=5, pady=5, anchor=NW)
-        steamIDLabel = Label(configWindow, name="steamIDLabel", text="Steam ID (64): ")
-        steamIDLabel.pack(side=TOP, padx=5, pady=5, anchor=NW)
-        authCodeLabel = Label(configWindow, name="authCodeLabel", text="Auth Code: ")
-        authCodeLabel.pack(side=TOP, padx=5, pady=5, anchor=NW)
-        countryCodeLabel = Label(configWindow, name="countryCodeLabel", text="Country Code: ")
-        countryCodeLabel.pack(side=TOP, padx=5, pady=5, anchor=NW)
+        keyFrame = Frame(configWindow, name="keyFrame")
+        keyFrame.pack(side=LEFT, fill=BOTH, expand=True)
+
+        valueFrame = Frame(configWindow, name="valueFrame")
+        valueFrame.pack(side=RIGHT, fill=BOTH, expand=True)
+        i = 0
+        for x in configDict.keys():
+            Label(keyFrame, text=x+": ").pack(side=TOP, padx=5, pady=5, anchor=NW)
+            Label(valueFrame, text=configDict[x]).pack(side=TOP, padx=5, pady=5, anchor=NW)
 
         self.pack(fill=BOTH, expand=True)
 
@@ -277,10 +276,10 @@ def createDeleteWindow(mainWindow):
 
 
 # Function that will create the config application window
-def createConfigWindow(mainWindow):
+def createConfigWindow(mainWindow, configs):
     configWindow = Toplevel(mainWindow)
-    ConfigLayout(configWindow)
-    configWindow.geometry("300x200+300+300")
+    ConfigLayout(configWindow, configs)
+    configWindow.geometry("650x380+300+300")
     configWindow.grab_set()
     return configWindow
 
@@ -365,6 +364,12 @@ def updateProfileDetails(mainWindow, profileDetails):
 def getStatusLabel(mainWindow):
     topFrame = mainWindow.children.get("topFrame")
     return topFrame.children.get("statusLabel")
+
+
+# Return the logout button widget from the main window
+def getLogoutButton(mainWindow):
+    topFrame = mainWindow.children.get("topFrame")
+    return topFrame.children.get("logoutButton")
 
 
 # Update the label with our selected profile name

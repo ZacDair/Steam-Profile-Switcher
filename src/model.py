@@ -1,6 +1,7 @@
 import profileValidation
 import configFileValidation
 import steamLogin
+import profileEdit
 
 
 # Validate and retrieve our profiles
@@ -104,3 +105,28 @@ def tryToLogin(username, password, twoFA, captcha, gid, sessionID):
             if responseLoginComplete.startswith("message:"):
                 return responseLoginComplete[8:len(responseLoginComplete)]
             return "Connection Error"
+
+
+# Clearing our config file acts as a logout feature
+def logout():
+    configFileValidation.createConfigFile()
+
+
+# Function run all of our needed code to upload a new image, name and bio
+def UpdateProfile(newName, newBio, newAvatar):
+    isAvatarUpdated = profileEdit.uploadAvatar(newAvatar)
+    isNameAndBioUpdated = profileEdit.updateProfileData(newName, newBio)
+    if isAvatarUpdated and isNameAndBioUpdated:
+        print("The new profile is now active")
+        return "Profile Switch Successful\nThe new profile is now active"
+    else:
+        errMsg = "An error occurred switching the profile:\n"
+        print("An error occurred updating profile data")
+        print("Avatar Upload Status: ", isAvatarUpdated)
+        print("Name and Bio Upload Status: ", isNameAndBioUpdated)
+        errDetails = ""
+        if not isAvatarUpdated:
+            errDetails = "Avatar failed to upload...\n"
+        if not isNameAndBioUpdated:
+            errDetails = errDetails + "Name and Bio failed to upload...\n"
+        return errMsg + errDetails
