@@ -1,7 +1,7 @@
 from tkinter import Tk, Label, Listbox, SINGLE, scrolledtext, Button, Frame, BOTH, RAISED, NW, RIGHT, LEFT, TOP, FLAT, BOTTOM, X, Y, PhotoImage, Entry, Toplevel, END, HORIZONTAL
 from tkinter.filedialog import askopenfilename
 from tkinter.ttk import Progressbar
-import time
+from PIL import ImageTk, Image
 
 # Init variables
 profiles = []
@@ -383,9 +383,19 @@ def clearScrollBox(scrollBox):
     scrollBox.delete(0, END)
 
 
+# Set the captcha image
 def setCaptchaImage(captchaImageLabel):
     captchaImage = PhotoImage(file="../captcha.jpg")
     captchaImageLabel.configure(image=captchaImage)
     captchaImageLabel.image = captchaImage
     captchaImageLabel.pack()
 
+
+# Set the profile image
+def setProfileImage(profileImageLabel, imgPath):
+    imgPIL = Image.open(imgPath)
+    img = imgPIL.resize((200, 200), Image.BICUBIC)
+    img = ImageTk.PhotoImage(img)
+    profileImageLabel.configure(image=img)
+    profileImageLabel.image = img
+    profileImageLabel.pack()

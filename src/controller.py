@@ -48,7 +48,11 @@ def triggerSelectionLogic(event):
         for x in profileDetails['bio']:
             bio = bio + x
         img = "../Profiles/" + name + "/" + profileDetails['img']
+        detailsFrame = mainWindowChildren.get("profileDetailsFrame")
+        imageLabel = detailsFrame.children.get("profileImgLabel")
+        view.setProfileImage(imageLabel, img)
 
+        # Update function that tries to update the profile data and returns strings to use in an alert
         def updateProfile():
             res = model.UpdateProfile(name, bio, img)
             view.createAlertWindow(mainWindow, res)
