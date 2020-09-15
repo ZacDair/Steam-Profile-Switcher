@@ -118,7 +118,15 @@ def UpdateProfile(newName, newBio, newAvatar):
     isNameAndBioUpdated = profileEdit.updateProfileData(newName, newBio)
     if isAvatarUpdated and isNameAndBioUpdated:
         print("The new profile is now active")
+        return "Profile Switch Successful\nThe new profile is now active"
     else:
+        errMsg = "An error occurred switching the profile:\n"
         print("An error occurred updating profile data")
         print("Avatar Upload Status: ", isAvatarUpdated)
         print("Name and Bio Upload Status: ", isNameAndBioUpdated)
+        errDetails = ""
+        if not isAvatarUpdated:
+            errDetails = "Avatar failed to upload...\n"
+        if not isNameAndBioUpdated:
+            errDetails = errDetails + "Name and Bio failed to upload...\n"
+        return errMsg + errDetails

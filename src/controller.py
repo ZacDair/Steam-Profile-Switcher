@@ -49,7 +49,11 @@ def triggerSelectionLogic(event):
             bio = bio + x
         img = "../Profiles/" + name + "/" + profileDetails['img']
 
-        uploadThread = threading.Thread(target=model.UpdateProfile, args=(name, bio, img))
+        def updateProfile():
+            res = model.UpdateProfile(name, bio, img)
+            view.createAlertWindow(mainWindow, res)
+
+        uploadThread = threading.Thread(target=updateProfile, args=())
         uploadThread.daemon = True
         uploadThread.start()
 
