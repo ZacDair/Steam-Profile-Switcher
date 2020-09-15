@@ -63,8 +63,6 @@ class MainLayout(Frame):
         helpButton.pack(side=LEFT, padx=5, pady=5)
         deleteProfileButton = Button(controlFrame, name="deleteProfileButton", text="Delete Profile")
         deleteProfileButton.pack(side=RIGHT, padx=5, pady=5)
-        switchProfileButton = Button(controlFrame, name="switchProfileButton", text="Switch Profile")
-        switchProfileButton.pack(side=RIGHT, padx=5, pady=5)
         createProfileButton = Button(controlFrame, name="createProfileButton", text="Create Profile")
         createProfileButton.pack(side=RIGHT, padx=5, pady=5)
 

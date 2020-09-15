@@ -43,13 +43,15 @@ def triggerSelectionLogic(event):
     if profileDetails:
         view.updateProfileDetails(mainWindow, profileDetails)
         view.selection = profileDetails["name"].strip("\n")
-        print(profileDetails)
         name = profileDetails['name'].strip("\n")
         bio = ''
         for x in profileDetails['bio']:
             bio = bio + x
         img = "../Profiles/" + name + "/" + profileDetails['img']
-        model.UpdateProfile(name, bio, img)
+
+        uploadThread = threading.Thread(target=model.UpdateProfile, args=(name, bio, img))
+        uploadThread.daemon = True
+        uploadThread.start()
 
 
 # Event triggered by login button, attempts a login
@@ -200,13 +202,12 @@ scrollBox.bind('<<ListboxSelect>>', triggerSelectionLogic)
 # statusLabel.bind('<Button-1>', triggerLoginLogic)
 
 
-# Event listeners for the main screen TODO: potentially isolate the lambda functions into local calls
+# Event listeners for the main screen
 controlFrame = mainWindowChildren.get("controlFrame")
 topFrame = mainWindowChildren.get("topFrame")
 
 deleteProfileButton = controlFrame.children.get("deleteProfileButton")
 createProfileButton = controlFrame.children.get("createProfileButton")
-switchProfileButton = controlFrame.children.get("switchProfileButton")
 helpButton = controlFrame.children.get("helpButton")
 configButton = topFrame.children.get("configButton")
 
