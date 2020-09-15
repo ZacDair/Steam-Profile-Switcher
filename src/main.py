@@ -1,220 +1,234 @@
-# Import dependencies (TODO: possibly need a version check as python 2 is Tkinter, python 3 is tkinter
-from tkinter import *
-from tkinter import scrolledtext
-from tkinter.filedialog import askopenfilename
+import time
+from tkinter import END
+import view
+import model
+import threading
 
-from src import profileValidation, configFileValidation
-
-# Create our applications main window
-masterWindow = Tk()
-masterWindow.title("Steam Profile Switcher")
-masterWindow.geometry('700x700')
-
-# Status label
-statusLabel = Label(masterWindow, text="Status: Waiting....")
-statusLabel.grid(row=0)
-
-# ScrollBox label
-scrollBoxLabel = Label(masterWindow, text="Searching for profiles...")
-scrollBoxLabel.grid(column=1, row=1)
-
-# Scroll box for profiles
-scrollBox = Listbox(masterWindow, width=50, selectmode=SINGLE)
-scrollBox.grid(column=1, row=2)
-
-# Label for selected profile section and the details
-selectedProfileLabel = Label(masterWindow, text="Selected Profile Details:")
-selectedProfileLabel.grid(column=2, row=2)
-profileNameLabel = Label(masterWindow, text="Profile Name: ")
-profileNameLabel.grid(column=2, row=3)
-profileImgLabel = Label(masterWindow, text="Profile Image: ")
-profileImgLabel.grid(column=2, row=4)
-profileBioLabel = Label(masterWindow, text="Profile Bio: ")
-profileBioLabel.grid(column=2, row=5)
+# Create and store a reference to our application's main window and children
+mainWindow = view.createMainWindow()
+mainWindowChildren = mainWindow.children
 
 
-# Populate our scroll box with the valid profiles
-def populateScrollBox():
-    profilesList = profileValidation.getProfiles()
-    newScrollBoxText = "Searching for profiles..."
-    for profile in profilesList:
-        scrollBox.insert(END, profile)
-    profileCount = len(profilesList)
-    if profileCount != 0:
-        newScrollBoxText = "Found " + str(profileCount) + " Profiles."
-        # Cheeky way to remove the s from profiles, if there is only one found
-        if profileCount == 1:
-            newScrollBoxText = newScrollBoxText.replace("s.", ".")
-    scrollBoxLabel.configure(text=newScrollBoxText)
-    return profilesList
+# Logout Function
+def logout():
+    model.logout()
+    updateStatusLabel()
 
 
-profiles = populateScrollBox()
-userConfigs = configFileValidation.getConfigs()
+# Check our login status, update label and activate/deactivate login/logout buttons as needed
+def updateStatusLabel():
+    label = view.getStatusLabel(mainWindow)
+    loginStatus, loggedIn = model.checkLogin()
+    if loggedIn:
+        label.configure(fg="green", text=loginStatus)
+        label.unbind('<Button-1>')
+        logoutButton = view.getLogoutButton(mainWindow)
+        logoutButton.configure(command=logout)
+    else:
+        label.bind('<Button-1>', triggerLoginLogic)
+        label.configure(fg="blue", text=loginStatus)
 
 
-# Change our profiles section labels to represent the selected profile
-def displaySelectedProfileDetails(event):
-    # Get the listbox selection index (returned as tuple)
-    selectedItem = scrollBox.curselection()
-    if len(selectedItem) > 0:
-        profileDetails = profileValidation.getProfileDetails(profiles[selectedItem[0]])
-        try:
-            profileNameLabel.configure(text="Profile Name: " + profileDetails["name"].replace("\n", ""))
-            profileImgLabel.configure(text="Profile Image: " + profileDetails["img"])
-            if profileDetails["bio"] != "None":
-                miniBioList = profileDetails["bio"]
-                profileBioLabel.configure(text="Profile Bio: " + miniBioList[0].replace("\n", "") + "...")
+# Ask model to find our profiles, then update our view accordingly
+def updateProfileList():
+    profiles, updateLabel = model.getProfiles()
+    view.populateScrollBox(profiles, mainWindow)
+    view.updateScrollBoxLabel(updateLabel, mainWindow)
+
+
+# Store our scrollBox selection, get our profile details and get view to update the details
+def triggerSelectionLogic(event):
+    selection = view.processScrollBoxSelection(mainWindow, scrollBox)
+    profileDetails = model.getProfileDetails(selection)
+    if profileDetails:
+        view.updateProfileDetails(mainWindow, profileDetails)
+        view.selection = profileDetails["name"].strip("\n")
+        name = profileDetails['name'].strip("\n")
+        bio = ''
+        for x in profileDetails['bio']:
+            bio = bio + x
+        img = "../Profiles/" + name + "/" + profileDetails['img']
+        detailsFrame = mainWindowChildren.get("profileDetailsFrame")
+        imageLabel = detailsFrame.children.get("profileImgLabel")
+        view.setProfileImage(imageLabel, img)
+
+        # Update function that tries to update the profile data and returns strings to use in an alert
+        def updateProfile():
+            res = model.UpdateProfile(name, bio, img)
+            view.createAlertWindow(mainWindow, res)
+
+        uploadThread = threading.Thread(target=updateProfile, args=())
+        uploadThread.daemon = True
+        uploadThread.start()
+
+
+# Event triggered by login button, attempts a login
+def triggerLoginLogic(event):
+    # Create our login window
+    loginWindow = view.createLoginWindow(mainWindow)
+
+    # Get our login window elements
+    inputFrame = loginWindow.children.get("inputFrame")
+    labelFrame = loginWindow.children.get("labelFrame")
+    buttonFrame = loginWindow.children.get("controlFrame")
+    progressFrame = loginWindow.children.get("progressFrame")
+    usernameInput = inputFrame.children.get("usernameInput")
+    passwordInput = inputFrame.children.get("passwordInput")
+    twoFAInput = inputFrame.children.get("twoFAInput")
+    captchaInput = inputFrame.children.get("captchaInput")
+    captchaImageLabel = labelFrame.children.get("captchaImageLabel")
+    loginButton = buttonFrame.children.get("loginButton")
+    progressBar = progressFrame.children.get("progressBar")
+    responseLabel = progressFrame.children.get("loginResponseLabel")
+
+    # Check if we need a captcha
+    captchaNeeded, sessionID, gid = model.captchaNeeded()
+    if captchaNeeded:
+        # Set captcha image label to the stored image
+        view.setCaptchaImage(captchaImageLabel)
+
+    # function to update our progress bar when called - conditional check to see if a thread gets stopped
+    def updateProgressBar():
+        activeThreads = threading.activeCount()
+        progressBar['value'] = 0
+        while progressBar['value'] <= 100 and activeThreads >= 3:
+            activeThreads = threading.activeCount()
+            progressBar['value'] = progressBar['value'] + 0.7325
+            time.sleep(0.18)
+
+    # Retrieve data from our input fields and attempt to login using a thread
+    def doLogin():
+        responseLabel.configure(fg="black", text="")
+        username = usernameInput.get()
+        password = passwordInput.get()
+        twoFA = twoFAInput.get()
+        captchaCode = captchaInput.get()
+        if len(password) != 0:
+            loginResponse = model.tryToLogin(username, password, twoFA, captchaCode, gid, sessionID)
+            # Update our label according to our login response
+            if loginResponse == "Username Error":
+                responseLabel.configure(fg="red", text="An error occurred please check your username...")
+            elif loginResponse == "Connection Error":
+                responseLabel.configure(fg="red", text="An connection error occurred...")
+            elif loginResponse == "Login Complete":
+                responseLabel.configure(fg="green", text="Successfully Logged in...")
+                loginWindow.destroy()
+                view.createAlertWindow(mainWindow, "Successfully Logged in...")
+                updateStatusLabel()
             else:
-                profileBioLabel.configure(text="Profile Bio: " + profileDetails["name"])
-        except KeyError:
-            print("Key error was found in the profile details dict")
-        except IndexError:
-            print("Index error, check bio")
+                responseLabel.configure(fg="red", text=loginResponse)
+                view.createAlertWindow(mainWindow, "Login Error: " + loginResponse)
+        else:
+            responseLabel.configure(fg="red", text="Please enter a password...")
+
+    # Function creates a thread and runs the doLogin
+    def callDoLogin():
+        loginThread = threading.Thread(target=doLogin, args=())
+        loginThread.daemon = True
+        loginThread.start()
+
+        # Update the progress bar while function runs
+        progressBarThread = threading.Thread(target=updateProgressBar, args=())
+        progressBarThread.daemon = True
+        progressBarThread.start()
+
+    # Set loginButton event to run the doLogin function above
+    loginButton.configure(command=callDoLogin)
+
+
+# Calls the model to delete the selected profile
+def deleteProfile(window):
+    selection = view.processScrollBoxSelection(mainWindow, scrollBox)
+    if model.deleteProfile(selection):
+        view.clearScrollBox(scrollBox)
+        updateProfileList()
     else:
-        print("Nothing selected to display")
+        view.createAlertWindow(mainWindow, "Unable to delete the profile")
+    window.destroy()
 
 
-# Update our configuration dict with the new values
-def updateConfigDict(configInputBoxes, configWindow):
-    i = 0
-    for key in userConfigs:
-        userConfigs[key] = configInputBoxes[i].get()
-        i = i + 1
-    configFileValidation.saveConfigsToFile(userConfigs)
-    configWindow.destroy()
-
-
-# Generate user input window for configs
-def createConfigInputWindow():
-    configInputWindow = Tk()
-    configInputWindow.title("User Configurations")
-    Label(configInputWindow, text="Current Configurations:").grid(row=1, column=1)
-
-    Label(configInputWindow, text="Session ID: ").grid(row=2, column=1)
-    Label(configInputWindow, text="Steam ID (64): ").grid(row=3, column=1)
-    Label(configInputWindow, text="Auth Code: ").grid(row=4, column=1)
-    Label(configInputWindow, text="Country Code: ").grid(row=5, column=1)
-
-    sessionIDInput = Entry(configInputWindow)
-    sessionIDInput.grid(row=2, column=2)
-    sessionIDInput.insert(0, userConfigs["sessionID"])
-
-    steamID64Input = Entry(configInputWindow)
-    steamID64Input.grid(row=3, column=2)
-    steamID64Input.insert(0, userConfigs["steamID64"])
-
-    authCodeInput = Entry(configInputWindow)
-    authCodeInput.grid(row=4, column=2)
-    authCodeInput.insert(0, userConfigs["authCode"])
-
-    countryCodeInput = Entry(configInputWindow)
-    countryCodeInput.grid(row=5, column=2)
-    countryCodeInput.insert(0, userConfigs["countryCode"])
-
-    configInputBoxes = [sessionIDInput, steamID64Input, authCodeInput, countryCodeInput]
-
-    saveConfigButton = Button(configInputWindow, text="Save", command=lambda: updateConfigDict(configInputBoxes, configInputWindow))
-    saveConfigButton.grid(row=6, column=1)
-    closeConfigButton = Button(configInputWindow, text="Close", command=configInputWindow.destroy)
-    closeConfigButton.grid(row=6, column=2)
-
-    mainloop()
-
-
-# Open file browser to select an image
-def findImageFile(imageInput):
-    acceptedFileTypes = [('image files', '.png'),
-                         ('image files', '.jpg'),
-                         ('image files', '.jpeg'),
-                         ('image files', '.gif')]
-    selectedFilePath = askopenfilename(filetypes=acceptedFileTypes, title='Choose a file')
-    imageInput.insert(0, selectedFilePath)
-
-
-# Save new profile details
-def saveNewProfileDetails(inputBoxes, profileWindow):
+# Calls the model to create the profile
+def createProfile(window):
     newProfileData = []
-    for x in inputBoxes:
-        try:
-            newProfileData.append(x.get('1.0', END))
-        except TypeError:
-            newProfileData.append(x.get())
-    if profileValidation.createNewProfile(newProfileData):
-        scrollBox.insert(END, newProfileData[0])
-        profiles.append(newProfileData[0])
-    profileWindow.destroy()
-
-
-# Function to create a profile
-def createNewProfileWindow():
-    newProfileWindow = Tk()
-    newProfileWindow.title("New Profile")
-    Label(newProfileWindow, text="Please enter the following:").grid(row=1, column=1)
-
-    Label(newProfileWindow, text="New Steam Name: ").grid(row=2, column=1)
-
-    profileNameInput = Entry(newProfileWindow)
-    profileNameInput.grid(row=2, column=2)
-
-    Label(newProfileWindow, text="New Steam Bio: ").grid(row=3, column=1)
-
-    profileBioInput = scrolledtext.ScrolledText(newProfileWindow, height=10, width=15)
-    profileBioInput.grid(row=3, column=2)
-
-    Label(newProfileWindow, text="New Steam Avatar: ").grid(row=4, column=1)
-
-    profileImageInput = Entry(newProfileWindow)
-    profileImageInput.grid(row=4, column=2)
-    browseButton = Button(newProfileWindow, text="Browse", command=lambda: findImageFile(profileImageInput))
-    browseButton.grid(row=4, column=3)
-
-    inputBoxes = [profileNameInput, profileBioInput, profileImageInput]
-    saveProfileButton = Button(newProfileWindow, text="Save", command=lambda: saveNewProfileDetails(inputBoxes, newProfileWindow))
-    saveProfileButton.grid(row=5, column=1)
-    closeProfileButton = Button(newProfileWindow, text="Close", command=newProfileWindow.destroy)
-    closeProfileButton.grid(row=5, column=2)
-
-    mainloop()
-
-
-def deleteProfile(selectedIndex, deleteProfileWindow):
-    profileValidation.deleteProfileFolder(profiles[selectedIndex])
-    scrollBox.delete(0, END)
-    populateScrollBox()
-    profiles.pop(selectedIndex)
-    deleteProfileWindow.destroy()
-
-
-# Delete a selected profile
-def createDeleteProfileWindow():
-    selectedItem = scrollBox.curselection()
-    if len(selectedItem) > 0:
-        deleteAlertWindow = Tk()
-        deleteAlertWindow.title("Deleting Profile")
-        Label(deleteAlertWindow, text="You are about to delete this profile: ").grid(row=1, column=1)
-        Label(deleteAlertWindow, text="Profile Name: " + profiles[selectedItem[0]]).grid(row=2, column=2)
-        Label(deleteAlertWindow, text="Are you sure ?").grid(row=3, column=1)
-        Button(deleteAlertWindow, text="Yes", command=lambda: deleteProfile(selectedItem[0], deleteAlertWindow)).grid(row=4, column=1)
-        Button(deleteAlertWindow, text="No", command=deleteAlertWindow.destroy).grid(row=4, column=2)
+    # Retrieve all of our frames and input elements
+    inputFrame = window.children.get("inputFrame")
+    avatarFrame = inputFrame.children.get("avatarFrame")
+    bioFrame = inputFrame.children.get("!frame")
+    nameInput = inputFrame.children.get("nameInput")
+    imageInput = avatarFrame.children.get("imageInput")
+    bioInput = bioFrame.children.get("bioInput")
+    # Retrieve the data inputted
+    newProfileData.append(nameInput.get())
+    newProfileData.append(bioInput.get('1.0', END))
+    newProfileData.append(imageInput.get())
+    # If a new profile was saved, clear and repopulate the scrollBox else generate an alert
+    if model.saveProfile(newProfileData):
+        view.clearScrollBox(scrollBox)
+        updateProfileList()
     else:
-        print("Select a profile first")
+        view.createAlertWindow(mainWindow, "Unable to create the profile")
+    window.destroy()
 
 
-# Config button
-configButton = Button(masterWindow, text="Configs", command=createConfigInputWindow)
-configButton.grid(row=0, column=4)
+# Function creates the delete window and stores a reference of it
+def createDeleteProfileWindow():
+    deleteWindow = view.createDeleteWindow(mainWindow)
+    if deleteWindow:
+        children = deleteWindow.children
+        yesButton = children.get("yesButton")
+        yesButton.configure(command=lambda: deleteProfile(deleteWindow))
+    else:
+        print("The delete window was not created...")
 
-# Main Control buttons
-switchProfileButton = Button(masterWindow, text="Switch Active Profile")
-switchProfileButton.grid(row=6, column=2)
-createProfileButton = Button(masterWindow, text="Create Profile", command=createNewProfileWindow)
-createProfileButton.grid(row=7, column=2)
-deleteProfileButton = Button(masterWindow, text="Delete Profile", command=createDeleteProfileWindow)
-deleteProfileButton.grid(row=7, column=3)
 
-# Testing generating events
-scrollBox.bind('<<ListboxSelect>>', displaySelectedProfileDetails)
+# Function creates the profile creation window
+def createProfileCreateWindow():
+    createWindow = view.createProfileCreateWindow(mainWindow)
+    if createWindow:
+        children = createWindow.children
+        frame = children.get("controlFrame")
+        saveButton = frame.children.get("saveButton")
+        saveButton.configure(command=lambda: createProfile(createWindow))
+    else:
+        print("The create window was not created...")
 
-# Run our main window
-masterWindow.mainloop()
+
+# Function creates a config window, and populates it with the configs
+def createConfigWindow():
+    configs = model.getConfigs()
+    view.createConfigWindow(mainWindow, configs)
+
+
+# Update our login label using a thread to run the check login and update function
+updateStatusLabelThread = threading.Thread(target=updateStatusLabel)
+updateStatusLabelThread.daemon = True
+updateStatusLabelThread.start()
+
+# Event listener for the scrollBox
+scrollBox = view.getScrollBoxItem(mainWindow, "scrollBox")
+scrollBox.bind('<<ListboxSelect>>', triggerSelectionLogic)
+
+# Event listener for the login status label
+# statusLabel = view.getStatusLabel(mainWindow)
+# statusLabel.bind('<Button-1>', triggerLoginLogic)
+
+
+# Event listeners for the main screen
+controlFrame = mainWindowChildren.get("controlFrame")
+topFrame = mainWindowChildren.get("topFrame")
+
+deleteProfileButton = controlFrame.children.get("deleteProfileButton")
+createProfileButton = controlFrame.children.get("createProfileButton")
+helpButton = controlFrame.children.get("helpButton")
+configButton = topFrame.children.get("configButton")
+
+deleteProfileButton.configure(command=createDeleteProfileWindow)
+createProfileButton.configure(command=createProfileCreateWindow)
+helpButton.configure(command=lambda: view.createAlertWindow(mainWindow, "Contact for assistance:\n zacdair@gmail.com"))
+configButton.configure(command=createConfigWindow)
+
+# Initial check for profiles, either populates the scrollBox, or will create an empty dir if needed
+updateProfileList()
+
+# Run our main application
+mainWindow.mainloop()
