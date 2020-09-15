@@ -112,9 +112,12 @@ def triggerLoginLogic(event):
                 responseLabel.configure(fg="red", text="An connection error occurred...")
             elif loginResponse == "Login Complete":
                 responseLabel.configure(fg="green", text="Successfully Logged in...")
+                loginWindow.destroy()
+                view.createAlertWindow(mainWindow, "Successfully Logged in...")
                 updateStatusLabel()
             else:
                 responseLabel.configure(fg="red", text=loginResponse)
+                view.createAlertWindow(mainWindow, "Login Error: " + loginResponse)
         else:
             responseLabel.configure(fg="red", text="Please enter a password...")
 
