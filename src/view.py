@@ -296,7 +296,7 @@ def createProfileCreateWindow(mainWindow):
 # Function that will create an alert window
 def createAlertWindow(mainWindow, message):
     alertWindow = Toplevel(mainWindow)
-    alertWindow.geometry("250x80+450+450")
+    alertWindow.geometry("280x100+450+450")
     AlertLayout(alertWindow, message)
     alertWindow.grab_set()
 
