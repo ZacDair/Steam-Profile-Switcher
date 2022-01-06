@@ -38,28 +38,30 @@ def updateProfileList():
 
 # Store our scrollBox selection, get our profile details and get view to update the details
 def triggerSelectionLogic(event):
-    selection = view.processScrollBoxSelection(mainWindow, scrollBox)
-    profileDetails = model.getProfileDetails(selection)
-    if profileDetails:
-        view.updateProfileDetails(mainWindow, profileDetails)
-        view.selection = profileDetails["name"].strip("\n")
-        name = profileDetails['name'].strip("\n")
-        bio = ''
-        for x in profileDetails['bio']:
-            bio = bio + x
-        img = "../Profiles/" + name + "/" + profileDetails['img']
-        detailsFrame = mainWindowChildren.get("profileDetailsFrame")
-        imageLabel = detailsFrame.children.get("profileImgLabel")
-        view.setProfileImage(imageLabel, img)
+    loginStatus, loggedIn = model.checkLogin()
+    if loggedIn:
+        selection = view.processScrollBoxSelection(mainWindow, scrollBox)
+        profileDetails = model.getProfileDetails(selection)
+        if profileDetails:
+            view.updateProfileDetails(mainWindow, profileDetails)
+            view.selection = profileDetails["name"].strip("\n")
+            name = profileDetails['name'].strip("\n")
+            bio = ''
+            for x in profileDetails['bio']:
+                bio = bio + x
+            img = "../Profiles/" + name + "/" + profileDetails['img']
+            detailsFrame = mainWindowChildren.get("profileDetailsFrame")
+            imageLabel = detailsFrame.children.get("profileImgLabel")
+            view.setProfileImage(imageLabel, img)
 
-        # Update function that tries to update the profile data and returns strings to use in an alert
-        def updateProfile():
-            res = model.UpdateProfile(name, bio, img)
-            view.createAlertWindow(mainWindow, res)
+            # Update function that tries to update the profile data and returns strings to use in an alert
+            def updateProfile():
+                res = model.UpdateProfile(name, bio, img)
+                view.createAlertWindow(mainWindow, res)
 
-        uploadThread = threading.Thread(target=updateProfile, args=())
-        uploadThread.daemon = True
-        uploadThread.start()
+            uploadThread = threading.Thread(target=updateProfile, args=())
+            uploadThread.daemon = True
+            uploadThread.start()
 
 
 # Event triggered by login button, attempts a login

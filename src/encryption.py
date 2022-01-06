@@ -3,7 +3,7 @@ __all__ = ['test']
 
 from js2py.pyjs import *
 # setting scope
-var = Scope( JS_BUILTINS )
+var = Scope(JS_BUILTINS)
 set_global_object(var)
 
 

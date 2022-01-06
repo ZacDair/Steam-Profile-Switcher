@@ -27,7 +27,7 @@ def getCurrentProfileData(customUrl):
     content = req.content.decode('utf-8')
 
     # Define our pre and post needles for each piece of data we need
-    profileDataClassName = "responsive_page_template_content"
+    profileDataClassName = "grouppage_content_area groupadmin_content"
     preProfileData = "g_rgProfileData = "
     postProfileData = ";"
     locationClassName = "header_real_name ellipsis"
@@ -39,8 +39,8 @@ def getCurrentProfileData(customUrl):
     postAvatar = '_full.jpg">'
 
     # Use our custom method to retrieve data in between the pre and post needles
-    profileClass = retrieveClass(profileDataClassName, content)
-    profileData = retrieveMiddleElement(preProfileData, postProfileData, profileClass)
+    # profileClass = retrieveClass(profileDataClassName, content)
+    profileData = retrieveMiddleElement(preProfileData, postProfileData, content)
     locationClass = retrieveClass(locationClassName, content)
     location = retrieveMiddleElement(preLocation, postLocation, locationClass)
     nameClass = retrieveClass(locationClassName, html)
@@ -175,7 +175,7 @@ def updateProfileData(newName, newSummary):
         body = {'sessionID': configs['sessionid'], 'type': 'profileSave', 'weblink_1_title': '','weblink_1_url': '',
                 'weblink_2_title': '', 'weblink_2_url': '', 'weblink_3_title': '', 'weblink_3_url': '',
                 'personaName': newName, 'real_name': profileData['real_name'], 'customURL': profileData['url'],
-                'country': country, 'state': state, 'city': city, 'summary': newSummary, 'json': 1}
+                'country': country, 'state': state, 'city': city, 'summary': newSummary, 'hide_profile_awards': 0,  'json': 1}
         cookies = getCookies()
         req = requests.post(url, data=body, cookies=cookies)
         res = validateResponse(req)
