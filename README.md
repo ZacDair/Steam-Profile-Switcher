@@ -14,7 +14,7 @@ More updates and info soon.
 
 ## Instructions to get going: ##  
 Install Python 3 (Tested with 3.7 currently)  
-Run setup.py (or manually download required dependencies such as Tkinter, Js2py)
+Run setup.py (or manually download required dependencies such as Tkinter, Js2py)  
 Run main.py - Tkinter GUI should now appear  
 Login with your Steam details (Top left button)  
 Create, Edit, Upload and switch profiles as you wish  
